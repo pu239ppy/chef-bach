@@ -27,8 +27,8 @@ require 'thread'
 # to be included in the result. Attribute hierarchy can be expressed as a dot seperated string. User the following
 # as an example
 #
-HOSTNAME_ATTR_SRCH_KEYS = {'hostname' => 'hostname'}
-HOSTNAME_NODENO_ATTR_SRCH_KEYS = {'hostname' => 'hostname', 'node_number' => 'bcpc.node_number'}
+HOSTNAME_ATTR_SRCH_KEYS = {'hostname' => 'fqdn'}
+HOSTNAME_NODENO_ATTR_SRCH_KEYS = {'hostname' => 'fqdn', 'node_number' => 'bcpc.node_number'}
 MGMT_IP_ATTR_SRCH_KEYS = {'mgmt_ip' => 'bcpc.management.ip'}
 
 def init_config
@@ -376,3 +376,15 @@ def get_restart_lock_holder(znode_path, zk_hosts="localhost:2181")
   end
   return val
 end
+
+def user_exists?(user_name)
+  user_found = false
+  chk_usr_cmd = "getent passwd #{user_name}"
+  Chef::Log.debug("Executing command: #{chk_usr_cmd}")
+  cmd = Mixlib::ShellOut.new(chk_usr_cmd, :timeout => 10).run_command
+  if cmd.exitstatus == 0
+    user_found = true
+  end
+  return user_found
+end
+

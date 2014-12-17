@@ -1,3 +1,5 @@
+require 'base64'
+
 # disable IPv6 (e.g. for HADOOP-8568)
 case node["platform_family"]
   when "debian"
@@ -62,9 +64,59 @@ end
 # Install Java
 include_recipe "bcpc-hadoop::java_config"
 include_recipe "java::default"
+include_recipe "java::oracle_jce"
 
 %w{zookeeper}.each do |pkg|
   package pkg do
     action :upgrade
+  end
+end
+
+# Create Keytabs (if kerberos is eanbled)
+if node[:bcpc][:hadoop][:enable_kerberos] == true then
+
+  directory "#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}" do
+    owner "root"
+    group "root"
+    recursive true
+    mode 0755  
+  end
+
+  # Download and create all keytabs
+  node[:bcpc][:hadoop][:kerberos][:data].each do |srvc, srvdat|
+
+    config_host = srvdat['princhost'] == "_HOST" ?  float_host(node[:hostname]) : srvdat['princhost'].split('.')[0]
+    file "#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/#{srvdat['keytab']}" do
+      action :delete
+      only_if {File.exists?("#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/#{srvdat['keytab']}") && node[:bcpc][:hadoop][:kerberos][:keytab][:recreate] == true}
+    end 
+
+    file "#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/#{srvdat['keytab']}" do
+      owner "#{srvdat['owner']}"
+      group "#{srvdat['owner']}"
+      mode "#{srvdat['perms']}"
+      content Base64.decode64(get_config("#{config_host}-#{srvc}"))
+      only_if { !File.exists?("#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/#{srvdat['keytab']}") && user_exists?("#{srvdat['owner']}")}
+    end
+  end
+  
+  # Initialize keytbas
+  node[:bcpc][:hadoop][:kerberos][:data].each do |srvc, srvdat|
+
+    config_host = srvdat['princhost'] == "_HOST" ? float_host(node[:fqdn]) : srvdat['princhost']
+
+    next if srvdat['principal'] == "HTTP"
+
+    execute "kdestroy-for-#{srvdat['owner']}" do
+      command "sudo -u #{srvdat['owner']} kdestroy"
+      action :run
+      only_if { user_exists?("#{srvdat['owner']}") }
+    end
+
+    execute "kinit-for-#{srvdat['owner']}" do
+    command "sudo -u #{srvdat['owner']} kinit -kt #{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/#{srvdat['keytab']} #{srvdat['principal']}/#{config_host}"
+      action :run
+      only_if { File.exists?("#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/#{srvdat['keytab']}") && user_exists?("#{srvdat['owner']}") }
+    end
   end
 end

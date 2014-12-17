@@ -60,12 +60,14 @@ bash "format namenode" do
   not_if { node[:bcpc][:hadoop][:mounts].any? { |d| File.exists?("/disk/#{d}/dfs/nn/current/VERSION") } }
 end
 
+zks = node[:bcpc][:hadoop][:zookeeper][:servers].map{|zkh| "#{zkh}:#{node[:bcpc][:hadoop][:zookeeper][:port]}"}.join(",")
+
 bash "format-zk-hdfs-ha" do
   code "yes | hdfs zkfc -formatZK"
   action :run
   user "hdfs"
   notifies :restart, "service[generally run hadoop-hdfs-namenode]", :delayed
-  not_if { zk_formatted? }
+  not_if { znode_exists?("/hadoop-ha/#{node.chef_environment}",zks) }
 end
 
 service "hadoop-hdfs-zkfc" do
