@@ -57,7 +57,7 @@ if @node['bcpc']['hadoop']['hdfs']['HA'] == true then
     user "hdfs"
     cwd  "/var/lib/hadoop-hdfs"
     action :run
-    not_if lazy { node[:bcpc][:hadoop][:mounts].all? { |d| Dir.entries("/disk/#{d}/dfs/nn/").include?("current") } }
+    not_if { lazy { node[:bcpc][:hadoop][:mounts].all? { |d| Dir.entries("/disk/#{d}/dfs/nn/").include?("current") } } }
   end  
 
   service "hadoop-hdfs-zkfc" do

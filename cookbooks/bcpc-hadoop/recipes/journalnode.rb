@@ -17,7 +17,7 @@ if get_config("namenode_txn_fmt") then
     group "hdfs"
     user 0644
     content Base64.decode64(get_config("namenode_txn_fmt"))
-    not_if lazy { node[:bcpc][:hadoop][:mounts].all? { |d| File.exists?("/disk/#{d}/dfs/jn/#{node.chef_environment}/current/VERSION") } }
+    not_if { lazy { node[:bcpc][:hadoop][:mounts].all? { |d| File.exists?("/disk/#{d}/dfs/jn/#{node.chef_environment}/current/VERSION") } } }
   end
 end
 

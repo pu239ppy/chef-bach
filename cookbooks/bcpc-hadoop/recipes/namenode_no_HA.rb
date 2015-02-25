@@ -52,8 +52,8 @@ bash "format namenode" do
   code "hdfs namenode -format -nonInteractive -force"
   user "hdfs"
   action :run
-  creates lazy "/disk/#{node[:bcpc][:hadoop][:mounts][0]}/dfs/nn/current/VERSION"
-  not_if lazy { node[:bcpc][:hadoop][:mounts].any? { |d| File.exists?("/disk/#{d}/dfs/nn/current/VERSION") } }
+  creates lazy { "/disk/#{node[:bcpc][:hadoop][:mounts][0]}/dfs/nn/current/VERSION" }
+  not_if { lazy { node[:bcpc][:hadoop][:mounts].any? { |d| File.exists?("/disk/#{d}/dfs/nn/current/VERSION") } } }
 end
 
 service "hadoop-hdfs-namenode" do
