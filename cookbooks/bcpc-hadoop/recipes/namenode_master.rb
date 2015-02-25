@@ -28,64 +28,20 @@ node.default['bcpc']['hadoop']['copylog']['namenode_master_out'] = {
   end
 end
 
-# need to ensure hdfs user is in hadoop and hdfs
-# groups. Packages will not add hdfs if it
-# is already created at install time (e.g. if
-# machine is using LDAP for users).
-
-# Create all the resources to add them in resource collection
-node[:bcpc][:hadoop][:os][:group].keys.each do |group_name|
-  node[:bcpc][:hadoop][:os][:group][group_name][:members].each do|user_name|
-    user user_name do
-      home "/var/lib/hadoop-#{user_name}"
-      shell '/bin/bash'
-      system true
-      action :create
-      not_if { user_exists?(user_name) }
-    end
-  end
-
-  group group_name do
-    append true
-    members node[:bcpc][:hadoop][:os][:group][group_name][:members]
-    action :nothing
-  end
-end
-  
-# Take action on each group resource based on its existence 
-ruby_block 'create_or_manage_groups' do
+ruby_block "hadoop disks" do
   block do
-    node[:bcpc][:hadoop][:os][:group].keys.each do |group_name|
-      res = run_context.resource_collection.find("group[#{group_name}]")
-      res.run_action(get_group_action(group_name))
+    node[:bcpc][:hadoop][:mounts].each do |d|
+      dir = Chef::Resource::Directory.new("/disk/#{d}/dfs/nn", run_context)
+      dir.owner "hdfs"
+      dir.group "hdfs"
+      dir.mode 0755
+      dir.recursive "true"
+      dir.run_action :create
+
+      exe = Chef::Resource::Execute.new("fixup nn owner", run_context)
+      exe.command "chown -Rf hdfs:hdfs /disk/#{d}/dfs"
+      exe.only_if { Etc.getpwuid(File.stat("/disk/#{d}/dfs/").uid).name != "hdfs" }
     end
-  end
-end
-
-directory "/var/log/hadoop-hdfs/gc/" do
-  user "hdfs"
-  group "hdfs"
-  action :create
-  notifies :restart, "service[generally run hadoop-hdfs-namenode]", :delayed
-end
-
-user_ulimit "hdfs" do
-  filehandle_limit 32769
-  process_limit 65536
-end
-
-node[:bcpc][:hadoop][:mounts].each do |d|
-  directory "/disk/#{d}/dfs/nn" do
-    owner "hdfs"
-    group "hdfs"
-    mode 0755
-    action :create
-    recursive true
-  end
-
-  execute "fixup nn owner" do
-    command "chown -Rf hdfs:hdfs /disk/#{d}/dfs"
-    only_if { Etc.getpwuid(File.stat("/disk/#{d}/dfs/").uid).name != "hdfs" }
   end
 end
 
@@ -103,8 +59,8 @@ bash "format namenode" do
   code "hdfs namenode -format -nonInteractive -force"
   user "hdfs"
   action :run
-  creates "/disk/#{node[:bcpc][:hadoop][:mounts][0]}/dfs/nn/current/VERSION"
-  not_if { node[:bcpc][:hadoop][:mounts].any? { |d| File.exists?("/disk/#{d}/dfs/nn/current/VERSION") } }
+  creates lazy "/disk/#{node[:bcpc][:hadoop][:mounts][0]}/dfs/nn/current/VERSION"
+  not_if lazy { node[:bcpc][:hadoop][:mounts].any? { |d| File.exists?("/disk/#{d}/dfs/nn/current/VERSION") } }
 end
 
 bash "format-zk-hdfs-ha" do
@@ -131,7 +87,7 @@ service "bring hadoop-hdfs-namenode down for shared edits and HA transition" do
   action :stop
   supports :status => true
   notifies :run, "bash[initialize-shared-edits]", :immediately
-  only_if { node[:bcpc][:hadoop][:mounts].all? { |d| not File.exists?("/disk/#{d}/dfs/jn/#{node.chef_environment}/current/VERSION") } }
+  only_if lazy { node[:bcpc][:hadoop][:mounts].all? { |d| not File.exists?("/disk/#{d}/dfs/jn/#{node.chef_environment}/current/VERSION") } }
 end
 
 bash "initialize-shared-edits" do
@@ -166,55 +122,9 @@ ruby_block "create-format-UUID-File" do
       system("tar czvf #{Chef::Config[:file_cache_path]}/nn_fmt.tgz nn/current/VERSION jn/#{node.chef_environment}/current/VERSION")
     end
   end
-  action :run
-  only_if { File.exists?("/disk/#{node[:bcpc][:hadoop][:mounts][0]}/dfs/nn/current/VERSION") and  File.exists?("/disk/#{node[:bcpc][:hadoop][:mounts][0]}/dfs/jn/#{node.chef_environment}/current/VERSION") }
-end
-
-ruby_block "upload-format-UUID-File" do
-  block do
-    cmdStrCount = "zgrep -a -i layoutVersion #{Chef::Config[:file_cache_path]}/nn_fmt.tgz|wc -l"
-    cmdStrUnqCount = "zgrep -a -i layoutVersion #{Chef::Config[:file_cache_path]}/nn_fmt.tgz|uniq|wc -l"
-    cmdStrLayVersn = "zgrep -a -i layoutVersion #{Chef::Config[:file_cache_path]}/nn_fmt.tgz|uniq|cut -d'=' -f2"
-
-    cmd = Mixlib::ShellOut.new(cmdStrCount, :timeout => 10).run_command
-    cmd.error!
-    Chef::Log.debug("Total number of version lines : #{cmd.stdout}") 
-    if cmd.stdout.to_i != 2
-      Chef::Log.fatal("Couldn't find required number of layoutVersion records");
-      raise
-    end
-
-    cmd = Mixlib::ShellOut.new(cmdStrUnqCount, :timeout => 10).run_command
-    cmd.error!
-    Chef::Log.debug("Total number of unique version lines : #{cmd.stdout}")
-    if cmd.stdout.to_i != 1
-      Chef::Log.fatal("Mismatched layoutVersion records between JN and NN in local file");
-      raise
-    end
-    
-    node_layout_version = 0
-    if node[:bcpc][:hadoop][:hdfs].key?('layoutVersion')
-      node_layout_version = node[:bcpc][:hadoop][:hdfs][:layoutVersion]
-    end
-
-    cmd = Mixlib::ShellOut.new(cmdStrLayVersn, :timeout => 10).run_command
-    cmd.error!
-    Chef::Log.debug("layoutVersion stored in node is : #{node_layout_version}")
-    Chef::Log.debug("layoutVersion stored in the file is #{cmd.stdout.to_i}")
-
-    if ( get_config("namenode_txn_fmt").nil? ) || ( cmd.stdout.to_i < node_layout_version )
-      make_config!("namenode_txn_fmt", Base64.encode64(IO.read("#{Chef::Config[:file_cache_path]}/nn_fmt.tgz")));
-      node.set[:bcpc][:hadoop][:hdfs][:layoutVersion] = cmd.stdout.to_i
-      node.save
-    elsif cmd.stdout.to_i > node_layout_version
-      Chef::Log.fatal("New HDFS layoutVersion is higher than old HDFS layoutVersion")
-      raise
-    end
-
-  end
-  action :run
-  ignore_failure true
-  only_if { File.exists?("#{Chef::Config[:file_cache_path]}/nn_fmt.tgz") }
+  action :nothing
+  subscribes :run, "service[generally run hadoop-hdfs-namenode]", :immediately
+  only_if lazy { File.exists?("/disk/#{node[:bcpc][:hadoop][:mounts][0]}/dfs/nn/current/VERSION") }
 end
 
 bash "reload hdfs nodes" do

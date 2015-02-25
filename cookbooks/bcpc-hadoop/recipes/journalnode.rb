@@ -17,40 +17,35 @@ if get_config("namenode_txn_fmt") then
     group "hdfs"
     user 0644
     content Base64.decode64(get_config("namenode_txn_fmt"))
-    not_if { node[:bcpc][:hadoop][:mounts].all? { |d| File.exists?("/disk/#{d}/dfs/jn/#{node.chef_environment}/current/VERSION") } }
+    not_if lazy { node[:bcpc][:hadoop][:mounts].all? { |d| File.exists?("/disk/#{d}/dfs/jn/#{node.chef_environment}/current/VERSION") } }
   end
 end
 
-node[:bcpc][:hadoop][:mounts].each do |d|
+ruby_block "hadoop disks" do
+  block do
+    node[:bcpc][:hadoop][:mounts].each do |d|
+      dir = Chef::Resource::Directory.new("/disk/#{d}/dfs/jn/", run_context)
+      dir.owner "hdfs"
+      dir.group "hdfs"
+      dir.mode 0755
+      dir.run_action :create
+      dir.recursive true
 
-  # Per chef-documentation for directory resource's recursive attribute:
-  # For the owner, group, and mode attributes, the value of this attribute applies only to the leaf directory
-  # Hence, we create "/disk/#{d}/dfs/jn/" to have "jn" dir owned by hdfs and then
-  # create "/disk/#{d}/dfs/jn/#{node.chef_environment}" owned by hdfs. 
-  # This way the jn/{environment} dir tree is owned by hdfs
-  
-  directory "/disk/#{d}/dfs/jn" do
-    owner "hdfs"
-    group "hdfs"
-    mode 0755
-    action :create
-    recursive true
-  end
+      dir = Chef::Resource::Directory.new("/disk/#{d}/dfs/jn/#{node.chef_environment}", run_context)
+      dir.owner "hdfs"
+      dir.group "hdfs"
+      dir.mode 0755
+      dir.run_action :create
+      dir.recursive true
 
-  directory "/disk/#{d}/dfs/jn/#{node.chef_environment}" do
-    owner "hdfs"
-    group "hdfs"
-    mode 0755
-    action :create
-    recursive true
-  end
-
-  bash "unpack-nn-fmt-image-to-disk-#{d}" do
-    user "root"
-    cwd "/disk/#{d}/dfs/"
-    code "tar xpzvf #{Chef::Config[:file_cache_path]}/nn_fmt.tgz"
-    notifies :restart, "service[hadoop-hdfs-journalnode]"
-    only_if { not get_config("namenode_txn_fmt").nil? and not File.exists?("/disk/#{d}/dfs/jn/#{node.chef_environment}/current/VERSION") }
+      bash = Chef::Resource::Bash.new("unpack nn fmt image", run_context)
+      bash.user "hdfs"
+      bash.code ["pushd /disk/#{d}/dfs/",
+                 "tar xzvf #{Chef::Config[:file_cache_path]}/nn_fmt.tgz",
+                 "popd"].join("\n")
+      bash.notifies :restart, "service[hadoop-hdfs-journalnode]", :delayed
+      bash.only_if { not get_config("namenode_txn_fmt").nil? and not File.exists?("/disk/#{d}/dfs/jn/#{node.chef_environment}/current/VERSION") }
+    end
   end
 end
 
@@ -102,5 +97,4 @@ service "hadoop-hdfs-journalnode" do
   supports :status => true, :restart => true, :reload => false
   subscribes :restart, "template[/etc/hadoop/conf/hdfs-site.xml]", :delayed
   subscribes :restart, "template[/etc/hadoop/conf/hdfs-site_HA.xml]", :delayed
-  subscribes :restart, "template[/etc/hadoop/conf/hadoop-env.sh]", :delayed
 end
