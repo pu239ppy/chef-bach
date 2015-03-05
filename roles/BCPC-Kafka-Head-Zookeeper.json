@@ -15,9 +15,9 @@
   "run_list": [
     "role[Basic]",
     "recipe[bcpc::default]",
-    "recipe[bcpc::networking]",
     "recipe[bcpc-hadoop::disks]",
     "recipe[bcpc::ubuntu_tools_repo]",
+    "recipe[bcpc::networking]",
     "recipe[kafka-bcpc::default]", 
     "recipe[kafka-bcpc::setattr]",
     "recipe[bcpc-hadoop::java_config]",

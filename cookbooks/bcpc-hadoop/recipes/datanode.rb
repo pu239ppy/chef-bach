@@ -122,7 +122,11 @@ template "/etc/hadoop/conf/container-executor.cfg" do
   owner "root"
   group "yarn"
   mode "0400"
-  variables(:mounts => lazy { node[:bcpc][:hadoop][:mounts] } )
+  variables lazy {
+    {
+      :mounts => node[:bcpc][:storage][:mounts]
+    }
+  }
   action :create
   notifies :run, "bash[verify-container-executor]", :immediate
 end

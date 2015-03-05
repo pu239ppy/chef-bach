@@ -31,7 +31,7 @@ ruby_block "hadoop disks" do
       dir.owner "hdfs"
       dir.group "hdfs"
       dir.mode 0755
-      dir.recursive "true"
+      dir.recursive true
       dir.run_action :create
 
       exe = Chef::Resource::Execute.new("fixup nn owner", run_context)
@@ -57,7 +57,7 @@ if @node['bcpc']['hadoop']['hdfs']['HA'] == true then
     user "hdfs"
     cwd  "/var/lib/hadoop-hdfs"
     action :run
-    not_if { lazy { node[:bcpc][:hadoop][:mounts].all? { |d| Dir.entries("/disk/#{d}/dfs/nn/").include?("current") } } }
+    not_if { lazy { node[:bcpc][:hadoop][:mounts].all? { |d| Dir.entries("/disk/#{d}/dfs/nn/").include?("current") } }.call }
   end  
 
   service "hadoop-hdfs-zkfc" do
