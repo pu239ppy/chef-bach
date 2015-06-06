@@ -20,8 +20,18 @@ if [[ "$(pwd)" != "$(git rev-parse --show-toplevel)" ]]; then
 fi
 
 ENVIRONMENT=Test-Laptop
-#PROXY=proxy.example.com:80
-DNS_SERVERS='"8.8.8.8", "8.8.4.4"'
+if [ -z $PROXY]
+  unset PROXY
+else
+  export PROXY
+fi 
+
+if [ -z $DNS_SERVERS ]; then
+  DNS_SERVERS='"8.8.8.8", "8.8.4.4"'
+else
+  export DNS_SERVERS
+fi
+
 export BOOTSTRAP_VM_MEM=3096
 export BOOTSTRAP_VM_CPUs=2
 export CLUSTER_VM_MEM=5120
