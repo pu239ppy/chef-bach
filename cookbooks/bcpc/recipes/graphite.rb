@@ -74,6 +74,20 @@ end
 
 mysql_servers = get_node_attributes(MGMT_IP_GRAPHITE_WEBPORT_ATTR_SRCH_KEYS,"mysql","bcpc")
 
+user node['bcpc']['graphite']['carbon_user'] do
+    comment "Carbon process owner"
+    shell "/bin/bash"
+end
+
+group 'www-data' do
+    action :modify
+    append node['bcpc']['graphite']['carbon_user']
+end
+
+user_ulimit node['bcpc']['graphite']['carbon_user'] do
+    filehandle_soft_limit 4096
+end
+
 # Directory resource sets owner and group only to the leaf directory.
 # All other directories will be owned by root
 directory "#{node['bcpc']['graphite']['local_data_dir']}" do
