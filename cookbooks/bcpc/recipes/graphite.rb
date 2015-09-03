@@ -79,11 +79,6 @@ user node['bcpc']['graphite']['carbon_user'] do
     shell "/bin/bash"
 end
 
-group 'www-data' do
-    action :modify
-    append node['bcpc']['graphite']['carbon_user']
-end
-
 user_ulimit node['bcpc']['graphite']['carbon_user'] do
     filehandle_soft_limit 4096
 end
@@ -91,8 +86,7 @@ end
 # Directory resource sets owner and group only to the leaf directory.
 # All other directories will be owned by root
 directory "#{node['bcpc']['graphite']['local_data_dir']}" do
-    owner "www-data"
-    group "www-data"
+    owner  node['bcpc']['graphite']['carbon_user'] 
     recursive true
 end
 
