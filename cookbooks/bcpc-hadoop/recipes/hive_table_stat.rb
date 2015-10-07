@@ -14,14 +14,14 @@ if hive_table_stats_passwd.nil?
 end
 
 bootstrap = get_bootstrap
-hive_search = get_nodes_for("hive_config").map!{ |x| x['fqdn'] }.join(",") 
+hive_search = get_nodes_for("hive_table_stats").map!{ |x| x['fqdn'] }.join(",") 
 hive_nodes = hive_search == "" ? node['fqdn'] : hive_hosts
 
-chef_vault_secret "mysql-hive-table-stats-password" do
+chef_vault_secret "mysql-hive-table-stats" do
   data_bag 'os'
   raw_data({ 'password' => hive_table_stats_passwd })
   admins "#{ hive_nodes}, #{ bootstrap }"
-  search "*:*"
+  search ""
   action :nothing
 end.run_action(:create_if_missing)
 
@@ -32,7 +32,7 @@ ruby_block "hive_table_stats_db" do
     if not system " #{cmd} 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = #{node["bcpc"]["hadoop"]["hive"]["hive_table_stats_db"]}' | grep -q #{node["bcpc"]["hadoop"]["hive"]["hive_table_stats_db"]}" then
       code = <<-EOF
         CREATE DATABASE #{node["bcpc"]["hadoop"]["hive"]["hive_table_stats_db"]};
-        GRANT #{privs} ON #{node["bcpc"]["hadoop"]["hive"]["hive_table_stats_db"]}.* TO '#{node["bcpc"]["hadoop"]["hive"]["hive_table_stats_db_user"]}'@'%' IDENTIFIED BY '#{get_config('password', 'mysql-hive-table-stats-password', 'os')}';
+        GRANT #{privs} ON #{node["bcpc"]["hadoop"]["hive"]["hive_table_stats_db"]}.* TO '#{node["bcpc"]["hadoop"]["hive"]["hive_table_stats_db_user"]}'@'%' IDENTIFIED BY '#{get_config('password', 'mysql-hive-table-stats', 'os')}';
         EOF
       IO.popen("mysql -uroot -p#{get_config('mysql-root-password')}", "r+") do |db|
         db.write code
