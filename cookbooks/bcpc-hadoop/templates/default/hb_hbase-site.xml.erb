@@ -12,61 +12,158 @@
     <name>hbase.rootdir</name>
     <value><%= node['bcpc']['hadoop']['hdfs_url'] %>/hbase</value>
   </property>
+
   <property>
     <name>hbase.zookeeper.quorum</name>
     <value><%= @zk_hosts.map{ |s| float_host(s[:hostname])}.join(",") %></value> 
   </property>
+
   <property>
     <name>hbase.zookeeper.property.clientPort</name>
     <value><%= node[:bcpc][:hadoop][:zookeeper][:port] %></value> 
   </property>
+
   <property>
     <name>hbase.cluster.distributed</name>
     <value>true</value>
   </property>
+
+  <property>
+    <name>hbase.hregion.majorcompaction</name>
+    <value><%= node["bcpc"]["hadoop"]["hbase"]["major_compact"]["time"] %></value>
+  </property>
+
   <property>
     <name>fail.fast.expired.active.master</name>
     <value><%= @master_hosts.length > 1 ? "true" : "false" %></value>
   </property>
+
   <property>
     <name>hbase.master.wait.on.regionservers.mintostart</name>
     <value><%= @rs_hosts.length/2+1 %></value>
   </property>
+
   <property>
     <name>hbase.regionserver.dns.interface</name>
     <value><%= node["bcpc"]["floating"]["interface"] %></value> 
   </property>
+
   <property>
     <name>hbase.master.dns.interface</name>
     <value><%= node["bcpc"]["floating"]["interface"] %></value> 
   </property>
+
   <property>
     <name>hbase.regionserver.ipc.address</name>
     <value><%= node["bcpc"]["floating"]["ip"] %></value> 
   </property>
+
   <property>
     <name>hbase.master.ipc.address</name>
     <value><%= node["bcpc"]["floating"]["ip"] %></value> 
   </property>
+
   <property>
     <name>hbase.regionserver.dns.nameserver</name>
     <value><%= @dns_server %></value> 
   </property>
+
   <property>
     <name>hbase.master.dns.nameserver</name>
     <value><%= @dns_server %></value> 
   </property>
+
   <property>
     <name>hbase.defaults.for.version.skip</name>
     <value>true</value>
   </property>
+
   <property>
     <name>hbase.regionserver.wal.codec</name>
     <value>org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec</value>
   </property>
+
   <property>
     <name>hbase.region.server.rpc.scheduler.factory.class</name>
     <value>org.apache.phoenix.hbase.index.ipc.PhoenixIndexRpcSchedulerFactory</value>
     <description>Factory to create the Phoenix RPC Scheduler that knows to put index updates into index queues</description>
   </property>
+
+  <property>
+    <name>dfs.client.read.shortcircuit</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>dfs.domain.socket.path</name>
+    <value>/var/run/hadoop-hdfs/dn._PORT</value>
+  </property>
+
+  <% if node[:bcpc][:hadoop][:kerberos][:enable] == true then %>
+  <!-- HBase Authorization Configuration -->
+  <property> 
+    <name>hbase.security.authorization</name> 
+    <value>true</value> 
+  </property> 
+
+  <property>    
+    <name>hbase.superuser</name>    
+    <value><%= node[:bcpc][:hadoop][:hbase][:superusers].join(",") %></value>    
+    <description>List of users or groups (comma-separated), who are allowed full privileges, regardless of stored ACLs, across the cluster. Only used when HBase security is enabled.</description>
+  </property>
+
+  <property>    
+    <name>hbase.coprocessor.region.classes</name>    
+    <value>org.apache.hadoop.hbase.security.token.TokenProvider,org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint,org.apache.hadoop.hbase.security.access.AccessController</value>
+    <description>A comma-separated list of Coprocessors that are loaded by default on all tables.</description>  
+  </property>
+
+  <property>
+    <name>hbase.security.exec.permission.checks</name>
+    <value>true</value>
+  </property>
+
+  <property>    
+    <name>hbase.coprocessor.regionserver.classes</name>    
+    <value>org.apache.hadoop.hbase.security.access.AccessController</value>    
+  </property> 
+
+  <property>    
+    <name>hbase.coprocessor.master.classes</name>    
+    <value>org.apache.hadoop.hbase.security.access.AccessController</value>    
+  </property> 
+
+  <!-- HBase Security Configuration -->
+  <property> 
+    <name>hbase.security.authentication</name> 
+    <value>kerberos</value> 
+  </property> 
+
+  <property>
+    <name>hbase.master.kerberos.principal</name>
+    <value><%= node[:bcpc][:hadoop][:kerberos][:data][:hbase][:principal] %>/<%=node[:bcpc][:hadoop][:kerberos][:data][:hbase][:princhost] == "_HOST" ? "_HOST" : node[:bcpc][:hadoop][:kerberos][:data][:hbase][:princhost]%>@<%= node[:bcpc][:hadoop][:kerberos][:realm] %></value>
+  </property>
+
+  <property> 
+    <name>hbase.master.keytab.file</name> 
+    <value><%= node[:bcpc][:hadoop][:kerberos][:keytab][:dir] %>/<%= node[:bcpc][:hadoop][:kerberos][:data][:hbase][:keytab] %></value> 
+    <description>Full path to the kerberos keytab file to use for logging in the configured HMaster server principal.</description> 
+  </property> 
+
+  <property>
+    <name>hbase.regionserver.kerberos.principal</name>
+    <value><%= node[:bcpc][:hadoop][:kerberos][:data][:hbase][:principal] %>/<%=node[:bcpc][:hadoop][:kerberos][:data][:hbase][:princhost] == "_HOST" ? "_HOST" : node[:bcpc][:hadoop][:kerberos][:data][:hbase][:princhost]%>@<%= node[:bcpc][:hadoop][:kerberos][:realm] %></value>
+  </property>
+
+  <property> 
+    <name>hbase.regionserver.keytab.file</name> 
+    <value><%= node[:bcpc][:hadoop][:kerberos][:keytab][:dir] %>/<%= node[:bcpc][:hadoop][:kerberos][:data][:hbase][:keytab] %></value> 
+    <description>Full path to the kerberos keytab file to use for logging in the configured HRegionServer server principal.</description> 
+  </property> 
+
+  <property>    
+    <name>hbase.rpc.engine</name>    
+    <value>org.apache.hadoop.hbase.ipc.SecureRpcEngine</value>    
+  </property>   
+  <% end %>
 </configuration>

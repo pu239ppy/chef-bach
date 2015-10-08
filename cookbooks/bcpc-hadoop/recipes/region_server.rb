@@ -16,18 +16,17 @@ node.default['bcpc']['hadoop']['copylog']['region_server_out'] = {
   end
 end
 
-directory "/usr/lib/hbase/lib/native/Linux-amd64-64/" do
+user_ulimit "hbase" do
+  filehandle_limit 32769
+end
+
+directory "/usr/hdp/current/hbase-regionserver/lib/native/Linux-amd64-64" do
   recursive true
   action :create
 end
 
-link "/usr/lib/hbase/lib/native/Linux-amd64-64/libsnappy.so.1" do
+link "/usr/hdp/current/hbase-regionserver/lib/native/Linux-amd64-64/libsnappy.so" do
   to "/usr/lib/libsnappy.so.1"
-end
-
-template "/etc/hbase/conf/hbase-env.sh" do
-  source "hb_hbase-env.sh.erb"
-  mode 0655
 end
 
 template "/etc/default/hbase" do
@@ -47,4 +46,6 @@ service "hbase-regionserver" do
   subscribes :restart, "template[/etc/hbase/conf/hbase-site.xml]", :delayed
   subscribes :restart, "template[/etc/hbase/conf/hbase-policy.xml]", :delayed
   subscribes :restart, "template[/etc/hbase/conf/hbase-env.sh]", :delayed
+  subscribes :restart, "template[/etc/hadoop/conf/hdfs-site.xml]", :delayed
+  subscribes :restart, "user_ulimit[hbase]", :delayed
 end

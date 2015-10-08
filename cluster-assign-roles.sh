@@ -34,7 +34,7 @@ KNIFE_ADMIN="-u admin -k /etc/chef-server/admin.pem"
 # Argument: $1 - a string of role!IP!FQDN pairs separated by white space
 # Will install the machine with role $role in the order passed (left to right)
 function install_machines {
-  passwd=`sudo knife data bag show configs $ENVIRONMENT $KNIFE_ADMIN | grep "cobbler-root-password:" | awk ' {print $2}'`
+  passwd=`sudo knife vault show os cobbler "root-password" --mode client | grep "root-password:" | awk ' {print $2}'`
   for h in $(sort <<< ${*// /\\n}); do
     [[ "$h" =~ $REGEX ]]
     local run_list="${BASH_REMATCH[1]}"
@@ -101,7 +101,7 @@ function install_stub {
 # Arguments: $* - hosts (as output from parse_cluster_txt)
 # Runs the end-to-end install in the proper order for OpenStack installs
 # Install method:
-# First, install first headnode -- which needs to be an admin
+# First, install first eeadnode -- which needs to be an admin
 # Next, install head-nodes start to finish and back to start synchronously
 # (this ensures all headnodes know of eachother)
 # Lastly, install workers in parallel)
@@ -172,7 +172,14 @@ function hadoop_install {
   done
 
   printf "Installing heads...\n"
-  install_machines $(printf ${hosts// /\\n} | grep -i "BCPC-Hadoop-Head" | sort)
+  for m in $(printf ${hosts// /\\n} | grep -i "BCPC-Hadoop-Head"| sort); do
+    [[ "$m" =~ $REGEX ]]
+    local fqdn="${BASH_REMATCH[3]}"
+    # authenticate the node one by one
+    vaults=$(sudo ./find_resources.rb $fqdn | tail -1)
+    sudo ./node_auth.rb $vaults $fqdn
+    install_machines $m
+  done
 
   # remove admin from the headnodes
   for h in $(printf ${hosts// /\\n} | grep -i "BCPC-Hadoop-Head" | sort); do
@@ -181,23 +188,22 @@ function hadoop_install {
   done
 
   printf "Installing workers...\n"
-  status_file=${TMPDIR:-/tmp}/status_file_$$
-  function clean_up_status_file {
+  status_file=$(mktemp)
+  function clean_up_status_file { 
     rm -f $status_file
   }
   trap clean_up_status_file EXIT
-  tempfile -n $status_file
   for m in $(printf ${hosts// /\\n} | grep -i "BCPC-Hadoop-Worker" | sort); do
     install_machines $m || echo "$m" >> $status_file &
   done
   wait
   failures=$(wc -l $status_file | sed 's/ .*//')
   if [[ $failures -ne 0 ]]; then
-    printf "Install failed for machines:\n$(cat $status_file)"
-    rm $status_file
+    printf "Install failed for machines:\n" > /dev/stderr
+    cat $status_file > /dev/stderr
     exit 1
   fi
-  rm -f $status_file
+  clean_up_status_file
   trap - EXIT
 }
 
@@ -246,7 +252,14 @@ function kafka_install {
     done
 
     printf "Installing kafka zookeeper heads...\n"
-    install_machines $(printf ${hosts// /\\n} | grep -i "BCPC-Kafka-Head-Zookeeper" | sort)
+    for m in $(printf ${hosts// /\\n} | grep -i "BCPC-Kafka-Head-Zookeeper" | sort); do
+      [[ "$m" =~ $REGEX ]]
+      local fqdn="${BASH_REMATCH[3]}"
+      # authenticate the node one by one
+      vaults=$(sudo ./find_resources.rb $fqdn | tail -1)
+      sudo ./node_auth.rb $vaults $fqdn
+      install_machines $m
+    done
   fi
 
   printf "Installing kafka server heads...\n"
@@ -273,8 +286,8 @@ INSTALL_TYPE=$2
 MATCHKEY=${3-}
 
 shopt -s nocasematch
-if [[ ! "$INSTALL_TYPE" =~ (openstack|hadoop|kafka) ]]; then
-  printf "Error: Need install type of OpenStack, Hadoop or Kafka\n" > /dev/stderr
+if [[ ! "$INSTALL_TYPE" =~ (openstack|hadoop|kafka|basic) ]]; then
+  printf "Error: Need install type of OpenStack, Hadoop, Kafka or Basic\n" > /dev/stderr
   exit 1
 fi
 shopt -u nocasematch
@@ -302,11 +315,12 @@ fi
 shopt -s nocasematch
 if [[ "$INSTALL_TYPE" = "OpenStack" ]]; then
   openstack_install $hosts
-### Hadoop Install Method
 elif [[ "$INSTALL_TYPE" = "Hadoop" ]]; then
   hadoop_install $hosts
 elif [[ "$INSTALL_TYPE" = "Kafka" ]]; then
   kafka_install $hosts
+elif [[ "$INSTALL_TYPE" = "Basic" ]]; then
+  install_stub $(printf ${hosts// /\\n} | sort)
 fi
 
 printf "#### Install finished\n"

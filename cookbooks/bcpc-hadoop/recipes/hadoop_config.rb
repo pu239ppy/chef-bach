@@ -26,7 +26,7 @@ hadoop_conf_files = %w{capacity-scheduler.xml
    ssl-client.xml
    ssl-server.xml
    yarn-site.xml
-   mapred.exclude
+   yarn.exclude
    dfs.exclude
 }
 node[:bcpc][:hadoop][:hdfs][:HA] == true and hadoop_conf_files.insert(-1,"hdfs-site_HA.xml")
@@ -55,7 +55,7 @@ end
   hadoop-env.sh}.each do |t|
  template "/etc/hadoop/conf/#{t}" do
    source "hdp_#{t}.erb"
-   mode 0644
+   mode 0555
    variables(:nn_hosts => node[:bcpc][:hadoop][:nn_hosts],
              :zk_hosts => node[:bcpc][:hadoop][:zookeeper][:servers],
              :jn_hosts => node[:bcpc][:hadoop][:jn_hosts],

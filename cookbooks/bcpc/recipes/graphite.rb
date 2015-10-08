@@ -21,7 +21,23 @@ include_recipe "bcpc::default"
 include_recipe "bcpc::apache2"
 
 make_config('mysql-graphite-user', "graphite")
-make_config('mysql-graphite-password', secure_password)
+# backward compatibility
+mysql_graphite_password = get_config("mysql-graphite-password")
+if mysql_graphite_password.nil?
+  mysql_graphite_password = secure_password
+end
+
+bootstrap = get_bootstrap
+results = get_nodes_for("graphite").map!{ |x| x['fqdn'] }.join(",")
+nodes = results == "" ? node['fqdn'] : results
+
+chef_vault_secret "mysql-graphite" do
+  data_bag 'os'
+  raw_data({ 'password' => mysql_graphite_password })
+  admins "#{ nodes },#{ bootstrap }"
+  search '*:*'
+  action :nothing
+end.run_action(:create_if_missing)
 
 %w{python-whisper_0.9.10_all.deb python-carbon_0.9.10_all.deb python-graphite-web_0.9.10_all.deb}.each do |pkg|
     # split package name on the first underscore to get the package name for dpkg to look-up
@@ -73,6 +89,14 @@ ruby_block "graphite_ip" do
 end
 
 mysql_servers = get_node_attributes(MGMT_IP_GRAPHITE_WEBPORT_ATTR_SRCH_KEYS,"mysql","bcpc")
+
+# Directory resource sets owner and group only to the leaf directory.
+# All other directories will be owned by root
+directory "#{node['bcpc']['graphite']['local_data_dir']}" do
+    owner "www-data"
+    group "www-data"
+    recursive true
+end
 
 template "/opt/graphite/conf/carbon.conf" do
     source "carbon.conf.erb"
@@ -136,7 +160,7 @@ template "/opt/graphite/webapp/graphite/local_settings.py" do
     source "graphite.local_settings.py.erb"
     owner "root"
     group "root"
-    mode 00644
+    mode 00640
     variables( :servers => mysql_servers )
     notifies :restart, "service[apache2]", :delayed
 end
@@ -151,8 +175,8 @@ ruby_block "graphite-database-creation" do
     block do
         if not system "mysql -uroot -p#{get_config('mysql-root-password')} -e 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"#{node['bcpc']['graphite_dbname']}\"'|grep \"#{node['bcpc']['graphite_dbname']}\"" then
             %x[ mysql -uroot -p#{get_config('mysql-root-password')} -e "CREATE DATABASE #{node['bcpc']['graphite_dbname']};"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['graphite_dbname']}.* TO '#{get_config('mysql-graphite-user')}'@'%' IDENTIFIED BY '#{get_config('mysql-graphite-password')}';"
-                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['graphite_dbname']}.* TO '#{get_config('mysql-graphite-user')}'@'localhost' IDENTIFIED BY '#{get_config('mysql-graphite-password')}';"
+                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['graphite_dbname']}.* TO '#{get_config('mysql-graphite-user')}'@'%' IDENTIFIED BY '#{get_config('password','mysql-graphite','os')}';"
+                mysql -uroot -p#{get_config('mysql-root-password')} -e "GRANT ALL ON #{node['bcpc']['graphite_dbname']}.* TO '#{get_config('mysql-graphite-user')}'@'localhost' IDENTIFIED BY '#{get_config('password','mysql-graphite','os')}';"
                 mysql -uroot -p#{get_config('mysql-root-password')} -e "FLUSH PRIVILEGES;"
             ]
             self.notifies :run, "bash[graphite-database-sync]", :immediately
@@ -171,8 +195,14 @@ bash "graphite-database-sync" do
     notifies :restart, "service[apache2]", :immediately
 end
 
+bash "cleanup-old-whisper-files" do
+  action :run
+  user "root"
+  code "find #{node['bcpc']['graphite']['local_data_dir']} -name '*.wsp' -mtime +#{node['bcpc']['graphite']['data']['retention']} -type f -exec rm {} \\;"
+end
+
 bash "cleanup-old-logs" do
   action :run
   user "root"
-  code "find /opt/graphite/storage/ -name *.wsp -mtime +#{node['bcpc']['graphite']['log']['retention']} -type f -exec rm {} \\;"
+  code "find #{node['bcpc']['graphite']['local_log_dir']} -name '*.log*' -mtime +#{node['bcpc']['graphite']['log']['retention']} -type f -exec rm {} \\;"
 end

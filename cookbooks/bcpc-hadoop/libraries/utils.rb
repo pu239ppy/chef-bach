@@ -27,8 +27,12 @@ require 'thread'
 # to be included in the result. Attribute hierarchy can be expressed as a dot seperated string. User the following
 # as an example
 #
-HOSTNAME_ATTR_SRCH_KEYS = {'hostname' => 'hostname'}
-HOSTNAME_NODENO_ATTR_SRCH_KEYS = {'hostname' => 'hostname', 'node_number' => 'bcpc.node_number'}
+
+# For Kerberos to work we need FQDN for each host. Changing "HOSTNAME" to "FQDN". 
+# Hadoop breaks principal into 3 parts  (Service, FQDN and REALM)
+
+HOSTNAME_ATTR_SRCH_KEYS = {'hostname' => 'fqdn'}
+HOSTNAME_NODENO_ATTR_SRCH_KEYS = {'hostname' => 'fqdn', 'node_number' => 'bcpc.node_number'}
 MGMT_IP_ATTR_SRCH_KEYS = {'mgmt_ip' => 'bcpc.management.ip'}
 
 def init_config
@@ -73,12 +77,6 @@ def make_config!(key, value)
   $edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['encrypt_data_bag']
   puts "++++++++++++ Updating existing item with key \"#{key}\""
   return value
-end
-
-def get_config(key)
-  init_config if $dbi.nil?
-  puts "------------ Fetching value for key \"#{key}\""
-  return (node['bcpc']['encrypt_data_bag'] ? $edbi[key] : $dbi[key])
 end
 
 def get_head_nodes
@@ -214,14 +212,6 @@ def set_hosts
   node.default[:bcpc][:hadoop][:httpfs_hosts] = get_node_attributes(HOSTNAME_ATTR_SRCH_KEYS,"httpfs","bcpc-hadoop")
   node.default[:bcpc][:hadoop][:rs_hosts] = get_node_attributes(HOSTNAME_ATTR_SRCH_KEYS,"region_server","bcpc-hadoop")
   node.default[:bcpc][:hadoop][:mysql_hosts] = get_node_attributes(HOSTNAME_ATTR_SRCH_KEYS,"mysql","bcpc")
-end
-
-def zk_formatted?
-  require 'rubygems'
-  require 'zookeeper'
-  z = Zookeeper.new("localhost:2181")
-  r = z.get_children(:path => "/hadoop-ha/#{node.chef_environment}")
-  return (r[:rc] == 0)
 end
 
 #
@@ -375,4 +365,26 @@ def get_restart_lock_holder(znode_path, zk_hosts="localhost:2181")
     end
   end
   return val
+end
+
+def user_exists?(user_name)
+  user_found = false
+  chk_usr_cmd = "getent passwd #{user_name}"
+  Chef::Log.debug("Executing command: #{chk_usr_cmd}")
+  cmd = Mixlib::ShellOut.new(chk_usr_cmd, :timeout => 10).run_command
+  if cmd.exitstatus == 0
+    user_found = true
+  end
+  return user_found
+end
+
+def group_exists?(group_name)
+  chk_grp_cmd = "getent group #{group_name}"
+  Chef::Log.debug("Executing command: #{chk_grp_cmd}")
+  cmd = Mixlib::ShellOut.new(chk_grp_cmd, :timeout => 10).run_command
+  return  cmd.exitstatus == 0 ? true : false 
+end
+
+def get_group_action(group_name)
+  return  group_exists?(group_name) ? :manage : :create 
 end

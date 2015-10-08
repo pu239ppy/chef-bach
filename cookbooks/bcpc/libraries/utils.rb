@@ -22,6 +22,22 @@ require 'base64'
 require 'thread'
 require 'ipaddr'
 
+# create databag if missing
+def create_databag(name)
+  if !Chef::DataBag.list.key?(name)
+    bag = Chef::DataBag.new
+    bag.name(name)
+    bag.create
+  end
+end
+
+# memrize function to bootstrap info
+def get_bootstrap
+  return $bootstrap if defined? $bootstrap
+  $bootstrap = get_all_nodes.select{|s| s.hostname.include? 'bootstrap'}[0].fqdn
+  return $bootstrap
+end
+
 #
 # Constant string which defines the default attributes which need to be retrieved from node objects
 # The format is hash { key => value , key => value }
@@ -33,72 +49,97 @@ HOSTNAME_MGMT_IP_ATTR_SRCH_KEYS = {'hostname' => 'hostname', 'mgmt_ip' => 'bcpc.
 MGMT_IP_GRAPHITE_WEBPORT_ATTR_SRCH_KEYS = {'mgmt_ip' => 'bcpc.management.ip', 'graphite_webport' => 'bcpc.graphite.web_port'}
 
 def init_config
-	if not Chef::DataBag.list.key?('configs')
-		Chef::Log.info "************ Creating data_bag \"configs\""
-		bag = Chef::DataBag.new
-		bag.name("configs")
-		bag.create
-	end rescue nil
-	begin
-		$dbi = Chef::DataBagItem.load('configs', node.chef_environment)
-		$edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['encrypt_data_bag']
-		Chef::Log.info "============ Loaded existing data_bag_item \"configs/#{node.chef_environment}\""
-	rescue
-		$dbi = Chef::DataBagItem.new
-		$dbi.data_bag('configs')
-		$dbi.raw_data = { 'id' => node.chef_environment }
-		$dbi.save
-		$edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['encrypt_data_bag']
-		Chef::Log.info "++++++++++++ Created new data_bag_item \"configs/#{node.chef_environment}\""
-	end
+  if not Chef::DataBag.list.key?('configs')
+    Chef::Log.info "************ Creating data_bag \"configs\""
+    bag = Chef::DataBag.new
+    bag.name("configs")
+    bag.create
+  end rescue nil
+  begin
+    $dbi = Chef::DataBagItem.load('configs', node.chef_environment)
+    $edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['encrypt_data_bag']
+    Chef::Log.info "============ Loaded existing data_bag_item \"configs/#{node.chef_environment}\""
+  rescue
+    $dbi = Chef::DataBagItem.new
+    $dbi.data_bag('configs')
+    $dbi.raw_data = { 'id' => node.chef_environment }
+    $dbi.save
+    $edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['encrypt_data_bag']
+    Chef::Log.info "++++++++++++ Created new data_bag_item \"configs/#{node.chef_environment}\""
+  end
 end
 
 def make_config(key, value)
-	init_config if $dbi.nil?
-	if $dbi[key].nil?
-		$dbi[key] = (node['bcpc']['encrypt_data_bag'] ? Chef::EncryptedDataBagItem.encrypt_value(value, Chef::EncryptedDataBagItem.load_secret) : value)
-		$dbi.save
-		$edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['encrypt_data_bag']
-		Chef::Log.info "++++++++++++ Creating new item with key \"#{key}\""
-		return value
-	else
-		Chef::Log.info "============ Loaded existing item with key \"#{key}\""
-		return (node['bcpc']['encrypt_data_bag'] ? $edbi[key] : $dbi[key])
-	end
+  init_config if $dbi.nil?
+  if $dbi[key].nil?
+    $dbi[key] = (node['bcpc']['encrypt_data_bag'] ? Chef::EncryptedDataBagItem.encrypt_value(value, Chef::EncryptedDataBagItem.load_secret) : value)
+    $dbi.save
+    $edbi = Chef::EncryptedDataBagItem.load('configs', node.chef_environment) if node['bcpc']['encrypt_data_bag']
+    Chef::Log.info "++++++++++++ Creating new item with key \"#{key}\""
+    return value
+  else
+    Chef::Log.info "============ Loaded existing item with key \"#{key}\""
+    return (node['bcpc']['encrypt_data_bag'] ? $edbi[key] : $dbi[key])
+  end
 end
 
-def get_config(key)
-	init_config if $dbi.nil?
-	Chef::Log.info  "------------ Fetching value for key \"#{key}\""
-	value = node['bcpc']['encrypt_data_bag'] ? $edbi[key] : $dbi[key]
-	return value
+# get value for data bag/chef-vault item with key
+# bag: databag name of chef vault item; 
+# item: chef vault item; 
+# key: the key to retrieve password in the item
+def get_config(key, item=node.chef_environment, bag="configs")
+  require 'chef-vault'
+  begin
+    entry = ChefVault::Item.load(bag, item)
+    return entry[key]
+  rescue ChefVault::Exceptions::KeysNotFound
+    if bag != "configs"
+      entry = Chef::DataBagItem.load(bag,item)
+      return entry[key]
+    else
+      init_config if $dbi.nil?
+      Chef::Log.info  "------------ Fetching value for key \"#{key}\""
+      value = node['bcpc']['encrypt_data_bag'] ? $edbi[key] : $dbi[key]
+      return value
+    end
+  end
+end
+
+def delete_config(key)
+  if !$dbi.nil? && $dbi.has_key?(key)
+    Chef::Log.info "++++++++++++ Found key #{key}. Deleting it now.... +++++++++++++++++++++++"
+    $dbi.delete(key) 
+    $dbi.save
+  else
+    Chef::Log.info "++++++++++++ Couldn't find key #{key} for deletion +++++++++++++++++++++++"
+  end
 end
 
 def get_config!(key)
-        value = get_config(key)
-        Chef::Application.fatal!("Failed to find value for #{key}!") if value.nil?
-	return value
+  value = get_config(key)
+  raise "Failed to find value for #{key}!" if value.nil?
+  return value
 end
 
 # Get all nodes for this Chef environment
 def get_all_nodes
-	results = search(:node, "chef_environment:#{node.chef_environment}")
-	if results.any?{|x| x['hostname'] == node['hostname']}
-		results.map!{|x| x['hostname'] == node['hostname'] ? node : x}
-	else
-		results.push(node)
-	end
-	return results.sort
+  results = search(:node, "chef_environment:#{node.chef_environment}")
+  if results.any?{|x| x['hostname'] == node['hostname']}
+    results.map!{|x| x['hostname'] == node['hostname'] ? node : x}
+  else
+    results.push(node)
+  end
+  return results.sort
 end
 
 def get_ceph_osd_nodes
-	results = search(:node, "recipes:bcpc\\:\\:ceph-work AND chef_environment:#{node.chef_environment}")
-	if results.any?{|x| x['hostname'] == node[:hostname]}
-		results.map!{|x| x['hostname'] == node[:hostname] ? node : x}
-	else
-		results.push(node)
-	end
-	return results.sort
+  results = search(:node, "recipes:bcpc\\:\\:ceph-work AND chef_environment:#{node.chef_environment}")
+  if results.any?{|x| x['hostname'] == node[:hostname]}
+    results.map!{|x| x['hostname'] == node[:hostname] ? node : x}
+  else
+    results.push(node)
+  end
+  return results.sort
 end
 
 def get_cached_head_node_names
@@ -174,17 +215,17 @@ def get_binary_server_url
 end
 
 def power_of_2(number)
-	result = 1
-	while (result < number) do result <<= 1 end
-	return result
+  result = 1
+  while (result < number) do result <<= 1 end
+  return result
 end
 
 def secure_password(len=20)
-	pw = String.new
-	while pw.length < len
-		pw << ::OpenSSL::Random.random_bytes(1).gsub(/\W/, '')
-	end
-	pw
+  pw = String.new
+  while pw.length < len
+    pw << ::OpenSSL::Random.random_bytes(1).gsub(/\W/, '')
+  end
+  pw
 end
 
 def secure_password_alphanum_upper(len=20)

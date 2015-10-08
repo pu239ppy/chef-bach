@@ -4,6 +4,7 @@ require 'mixlib/shellout'
 
 include_recipe 'dpkg_autostart'
 include_recipe 'bcpc-hadoop::hadoop_config'
+include_recipe 'bcpc-hadoop::namenode_queries'
 
 #
 # Updating node attribuetes to copy namenode log files to centralized location (HDFS)
@@ -25,6 +26,52 @@ node.default['bcpc']['hadoop']['copylog']['namenode_master_out'] = {
   package pkg do
     action :upgrade
   end
+end
+
+# need to ensure hdfs user is in hadoop and hdfs
+# groups. Packages will not add hdfs if it
+# is already created at install time (e.g. if
+# machine is using LDAP for users).
+
+# Create all the resources to add them in resource collection
+node[:bcpc][:hadoop][:os][:group].keys.each do |group_name|
+  node[:bcpc][:hadoop][:os][:group][group_name][:members].each do|user_name|
+    user user_name do
+      home "/var/lib/hadoop-#{user_name}"
+      shell '/bin/bash'
+      system true
+      action :create
+      not_if { user_exists?(user_name) }
+    end
+  end
+
+  group group_name do
+    append true
+    members node[:bcpc][:hadoop][:os][:group][group_name][:members]
+    action :nothing
+  end
+end
+  
+# Take action on each group resource based on its existence 
+ruby_block 'create_or_manage_groups' do
+  block do
+    node[:bcpc][:hadoop][:os][:group].keys.each do |group_name|
+      res = run_context.resource_collection.find("group[#{group_name}]")
+      res.run_action(get_group_action(group_name))
+    end
+  end
+end
+
+directory "/var/log/hadoop-hdfs/gc/" do
+  user "hdfs"
+  group "hdfs"
+  action :create
+  notifies :restart, "service[generally run hadoop-hdfs-namenode]", :delayed
+end
+
+user_ulimit "hdfs" do
+  filehandle_limit 32769
+  process_limit 65536
 end
 
 node[:bcpc][:hadoop][:mounts].each do |d|
@@ -65,7 +112,8 @@ bash "format-zk-hdfs-ha" do
   action :run
   user "hdfs"
   notifies :restart, "service[generally run hadoop-hdfs-namenode]", :delayed
-  not_if { zk_formatted? }
+  zks = node[:bcpc][:hadoop][:zookeeper][:servers].map{|zkh| "#{zkh[:hostname]}:#{node[:bcpc][:hadoop][:zookeeper][:port]}"}.join(",")
+  not_if { znode_exists?("/hadoop-ha/#{node.chef_environment}", zks) }
 end
 
 service "hadoop-hdfs-zkfc" do
@@ -93,15 +141,16 @@ bash "initialize-shared-edits" do
 end
 
 service "generally run hadoop-hdfs-namenode" do
-   action [:enable, :start]
-   supports :status => true, :restart => true, :reload => false
-   service_name "hadoop-hdfs-namenode"
-   subscribes :restart, "template[/etc/hadoop/conf/hdfs-site.xml]", :delayed
-   subscribes :restart, "template[/etc/hadoop/conf/hdfs-policy.xml]", :delayed
-   subscribes :restart, "template[/etc/hadoop/conf/hdfs-site_HA.xml]", :delayed
-   subscribes :restart, "template[/etc/hadoop/conf/hadoop-env.sh]", :delayed
-   subscribes :restart, "template[/etc/hadoop/conf/topology]", :delayed
-   subscribes :restart, "bash[initialize-shared-edits]", :immediately
+  action [:enable, :start]
+  supports :status => true, :restart => true, :reload => false
+  service_name "hadoop-hdfs-namenode"
+  subscribes :restart, "template[/etc/hadoop/conf/hdfs-site.xml]", :delayed
+  subscribes :restart, "template[/etc/hadoop/conf/hdfs-policy.xml]", :delayed
+  subscribes :restart, "template[/etc/hadoop/conf/hdfs-site_HA.xml]", :delayed
+  subscribes :restart, "template[/etc/hadoop/conf/hadoop-env.sh]", :delayed
+  subscribes :restart, "template[/etc/hadoop/conf/topology]", :delayed
+  subscribes :restart, "user_ulimit[hdfs]", :delayed
+  subscribes :restart, "bash[initialize-shared-edits]", :immediately
 end
 
 ## We need to bootstrap the standby and journal node transaction logs

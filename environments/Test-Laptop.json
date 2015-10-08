@@ -32,6 +32,7 @@
       "bootstrap": {
         "interface" : "eth0",
         "pxe_interface" : "eth1",
+        "hostname" : "bcpc-bootstrap",
         "server" : "10.0.100.3",
         "dhcp_subnet" : "10.0.100.0",
         "dhcp_range" : "10.0.100.14 10.0.100.250"
@@ -42,9 +43,12 @@
           "dfs_replication_factor" : 1
         },
         "disks" : ["sdb" , "sdc" ],
-        "distribution" : {
-          "version" : "HDP",
-          "key" : "hortonworks.key"
+        "distribution": {
+          "version": "HDP",
+          "key": "hortonworks.key"
+        },
+        "oozie": {
+          "memory_opts": "-Xmx512m -XX:MaxPermSize=64m"
         }
       },
       "repos" : {

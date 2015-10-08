@@ -3,7 +3,9 @@
   "json_class": "Chef::Role",
   "run_list": [
     "role[Basic]",
+    "recipe[bcpc::chef_vault_install]",
     "recipe[bcpc::default]",
+    "recipe[bcpc::ubuntu_tools_repo]",
     "recipe[bcpc-hadoop::default]",
     "recipe[bcpc::networking]",
     "recipe[bcpc-hadoop::disks]",
@@ -14,10 +16,10 @@
     "recipe[bcpc-hadoop::httpfs]",
     "recipe[bcpc-hadoop::region_server]",
     "recipe[bcpc-hadoop::pig]",
+    "recipe[bach_spark::default]",
     "recipe[bcpc-hadoop::tez]",
     "recipe[bcpc-hadoop::mahout]",
     "recipe[bcpc-hadoop::oozie_client]",
-    "recipe[bcpc::zabbix-work]",
     "recipe[bcpc::diamond]",
     "recipe[bcpc_jmxtrans]"
   ],
