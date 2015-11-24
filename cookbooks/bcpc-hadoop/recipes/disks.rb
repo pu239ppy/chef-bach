@@ -31,7 +31,7 @@ if hadoop_disks.length != nil then
       recursive true
     end
    
-    d = hadoop_disks
+    d = hadoop_disks[i]
     execute "mkfs -t xfs -f /dev/#{d}" do
       not_if "file -s /dev/#{d} | grep -q 'SGI XFS filesystem'"
     end
