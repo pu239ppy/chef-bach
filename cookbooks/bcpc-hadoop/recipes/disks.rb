@@ -22,7 +22,7 @@ if node[:bcpc][:hadoop][:user_disk] == true then
 end
 
 if hadoop_disks.length != nil then
-  doop_disks.each_index do |i|
+  hadoop_disks.each_index do |i|
     directory "/disk/#{i}" do
       owner "root"
       group "root"
