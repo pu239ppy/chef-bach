@@ -2,6 +2,7 @@
   "name": "Test-Laptop",
   "override_attributes": {
     "bcpc": {
+      "graphite_disks": ["sdc"],
       "virt_type" : "qemu",
       "ceph": {
         "hdd_disks" : [ "sdb", "sdc" ],
@@ -42,7 +43,7 @@
         "hdfs" : {
           "dfs_replication_factor" : 1
         },
-        "disks" : ["sdb" , "sdc" ],
+        "disks" : ["sdb"],
         "distribution": {
           "version": "HDP",
           "key": "hortonworks.key"
