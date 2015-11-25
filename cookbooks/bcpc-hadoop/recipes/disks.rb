@@ -55,8 +55,16 @@ if node[:bcpc][:hadoop][:user_disk] == true then
     execute "mkfs -t ext4 -U #{uuid_label} /dev/#{user_disk}" do
       not_if "file -s /dev/#{user_disk} | grep -q 'ext4 filesystem data'"
     end
+
+    directory "/opt/graphite" do
+      owner "root"
+      group "root"
+      mode 00755
+      action :create
+    end
+   
     quotaenable "user_dir_quota" do
-      mount_pount "/home"
+      mount_pount "/opt/graphite"
       mount_device "UUID=#{uuuid_label}"  
       quota_type :group
     end
