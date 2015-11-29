@@ -27,40 +27,43 @@ d-i     partman/early_command string \
           done
 d-i     partman-auto/disk string /dev/sda
 d-i     partman-auto/method string lvm
-d-i     partman-lvm/device_remove_lvm boolean true
-d-i     partman-md/device_remove_md boolean true
 d-i     partman-auto-lvm/guided_size string max
-d-i     partman-auto-lvm/no_boot boolean true
 d-i     partman-auto-lvm/new_vg_name string hadoop-root
 
 d-i     partman-auto/expert_recipe string root :: \
         5000 100000 10000000000 ext4 \
         $primary{ } $bootable{ } $lvmok{} method{ lvm } \
           format{ } filesystem{ ext4 } \
-          in_vg {hadoop_root} \
+          in_vg {hadoop_root} use_filesystem{} \
           mountpoint{ / } \
         . \
         5000 5000 5000 ext4 \
         $primary{ } $lvmok{} method{ lvm } \
           format{ } filesystem{ ext4 } \
-          in_vg {hadoop_root} \
+          in_vg {hadoop_root} use_filesystem{} \
           mountpoint{ /home } \
         . \
         8192 8192 200% linux-swap \
-            $lvmok{ } \
+        $lvmok{ } use_filesystem{} \
             in_vg {hadoop_root} \
             $primary{ } \
             method{ swap } \
             format{ } \
         .
 d-i     partman-auto/choose_recipe select root
-d-i     partman-lvm/confirm boolean true
-d-i     partman-partitioning/confirm_write_new_label boolean true
 d-i     partman/choose_partition select Finish partitioning and write changes to disk
 
-d-i     partman/confirm_write_new_label boolean true
-d-i     partman/confirm_nooverwrite boolean true
-d-i     partman/confirm boolean true
+d-i     partman/confirm_write_new_label     boolean true
+d-i     partman/confirm_nooverwrite         boolean true
+d-i     partman/confirm                     boolean true
+d-i     partman-auto/purge_lvm_from_device  boolean true
+d-i     partman-lvm/device_remove_lvm       boolean true
+d-i     partman-lvm/confirm                 boolean true
+d-i     partman-lvm/confirm_nooverwrite     boolean true
+d-i     partman-auto-lvm/no_boot            boolean true
+d-i     partman-md/device_remove_md         boolean true
+d-i     partman-md/confirm                  boolean true
+d-i     partman-md/confirm_nooverwrite      boolean true
 
 d-i     clock-setup/utc boolean true
 d-i     clock-setup/ntp boolean true
