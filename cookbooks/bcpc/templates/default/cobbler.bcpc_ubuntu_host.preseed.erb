@@ -37,11 +37,13 @@ d-i     partman-auto/expert_recipe string root :: \
         5000 100000 10000000000 ext4 \
         $primary{ } $bootable{ } lvmok{} method{ lvm } \
           format{ } filesystem{ ext4 } \
+          $in_vg {hadoop_root} \
           mountpoint{ / } \
         . \
         5000 5000 5000 ext4 \
         $primary{ } lvmok{} method{ lvm } \
           format{ } filesystem{ ext4 } \
+          $in_vg {hadoop_root} \
           mountpoint{ /home } \
         . \
         8192 8192 200% linux-swap \
