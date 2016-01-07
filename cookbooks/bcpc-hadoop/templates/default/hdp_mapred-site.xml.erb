@@ -72,12 +72,12 @@
 
   <property> 
       <name>mapreduce.map.java.opts</name> 
-      <value><%="-Xmx #{0.8 * node['bcpc']['hadoop']['yarn']['scheduler']['minimum-allocation-mb']}" %></value> 
+      <value><%="-Xmx#{(0.8 * node['bcpc']['hadoop']['yarn']['scheduler']['minimum-allocation-mb']).round}m" %></value> 
   </property> 
 
   <property> 
       <name>mapreduce.reduce.memory.mb</name> 
-      <value><%="-Xmx#{(0.8 * node['bcpc']['hadoop']['yarn']['scheduler']['minimum-allocation-mb']).round}m" %></value>
+      <value><%= 2 * node['bcpc']['hadoop']['yarn']['scheduler']['minimum-allocation-mb'] %></value>
   </property> 
 
   <property> 
@@ -85,9 +85,12 @@
       <value><%="-Xmx#{(0.8 * 2 * node['bcpc']['hadoop']['yarn']['scheduler']['minimum-allocation-mb']).round}m" %></value>
   </property> 
 
-
   <property> 
       <name>yarn.app.mapreduce.am.resource.mb</name> 
-      <value><%= node['bcpc']['hadoop']['yarn']['scheduler']['minimum-allocation-mb'] %></value> 
+      <value><%= 2 * node['bcpc']['hadoop']['yarn']['scheduler']['minimum-allocation-mb'] %></value> 
   </property> 
+
+  <property>
+    <name>yarn.app.mapreduce.am.command-opts</name>
+    <value><%="-Xmx#{ (0.8 * 2 * node['bcpc']['hadoop']['yarn']['scheduler']['minimum-allocation-mb']).round}m" %></value> 
 </configuration>
