@@ -272,6 +272,7 @@ ruby_block "acquire_lock_to_restart_datanode" do
   end
   action :nothing
   subscribes :create, "template[/etc/hadoop/conf/hdfs-site.xml]", :immediate
+  subscribes :create, "template[/etc/hadoop/conf/hadoop-metrics2.properties]", :immediate
   subscribes :create, "template[/etc/hadoop/conf/hadoop-env.sh]", :immediate
   subscribes :create, "template[/etc/hadoop/conf/topology]", :immediate
   subscribes :create, "user_ulimit[hdfs]", :immediate
