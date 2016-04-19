@@ -61,25 +61,17 @@ if ! [[ -f jmxtrans-20120525-210643-4e956b1144.zip ]]; then
 fi
 FILES="jmxtrans-20120525-210643-4e956b1144.zip $FILES"
 
-# Fetch MySQL connector
-if ! [[ -f mysql-connector-java-5.1.34.tar.gz ]]; then
-  while ! $(file mysql-connector-java-5.1.34.tar.gz | grep -q 'gzip compressed data'); do
-    $CURL -O -L http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.34.tar.gz
-  done
-fi
-FILES="mysql-connector-java-5.1.34.tar.gz $FILES"
-
 # Fetch Kafka Tar
-for version in 0.8.1 0.8.1.1; do
+for version in 0.9.0.1; do
   mkdir -p kafka/${version}/
-  if ! [[ -f kafka/${version}/kafka_2.9.2-${version}.tgz ]]; then
+  if ! [[ -f kafka/${version}/kafka_2.11-${version}.tgz ]]; then
     pushd kafka/${version}/
-    while ! $(file kafka_2.9.2-${version}.tgz | grep -q 'gzip compressed data'); do
-      $CURL -O -L https://archive.apache.org/dist/kafka/${version}/kafka_2.9.2-${version}.tgz
+    while ! $(file kafka_2.11-${version}.tgz | grep -q 'gzip compressed data'); do
+      $CURL -O -L http://mirrors.ocf.berkeley.edu/apache/kafka/${version}/kafka_2.11-${version}.tgz
     done
     popd
   fi
-  FILES="kafka_2.9.2-${version}.tgz $FILES"
+  FILES="kafka_2.11-${version}.tgz $FILES"
 done
 
 # Fetch Java Tar
@@ -96,6 +88,14 @@ if ! [[ -f UnlimitedJCEPolicyJDK7.zip ]]; then
   done
 fi
 FILES="UnlimitedJCEPolicyJDK7.zip $FILES"
+
+# Fetch Java Tar
+if ! [[ -f jdk-8u74-linux-x64.tar.gz ]]; then
+  while ! $(file jdk-8u74-linux-x64.tar.gz | grep -q 'gzip compressed data'); do
+    $CURL -O -L -C - -b "oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u74-b02/jdk-8u74-linux-x64.tar.gz
+  done
+fi
+FILES="jdk-8u74-linux-x64.tar.gz $FILES"
 
 if ! [[ -f jce_policy-8.zip ]]; then
   while ! $(file jce_policy-8.zip | grep -q 'Zip archive data'); do

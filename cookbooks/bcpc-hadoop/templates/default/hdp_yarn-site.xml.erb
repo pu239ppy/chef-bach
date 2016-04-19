@@ -132,9 +132,15 @@
   </property>
 
   <property>
+    <name>yarn.nodemanager.address</name>
+    <value><%=float_host(node[:hostname])%>:<%=node["bcpc"]["hadoop"]["yarn"]["nodemanager"]["port"]%></value>
+  </property>
+
+  <property>
     <name>yarn.nodemanager.hostname</name>
     <value><%= float_host(node[:hostname]) %></value>
   </property>
+
   <% end # if node.run_list.expand(node.chef_environment).recipes.include?("bcpc-hadoop::datanode") %>
 
   <property>
@@ -156,7 +162,7 @@
 
   <property>
     <name>yarn.nodemanager.local-dirs</name>
-    <value><%=@mounts.map{ |d| "file:///disk/#{d}/yarn/local" }.join(",")%></value>
+    <value><%=@mounts.map{ |d| "/disk/#{d}/yarn/local" }.join(",")%></value>
   </property>
 
   <property>
@@ -216,11 +222,6 @@
   </property>
 
   <property>
-    <name>yarn.nodemanager.linux-container-executor.group</name>
-    <value>yarn</value>
-  </property>
-
-  <property>
     <name>yarn.nodemanager.linux-container-executor.cgroups.mount-path</name>
     <value>/sys/fs/cgroup/</value>
   </property>
@@ -234,6 +235,12 @@
   <property>
     <name>yarn.scheduler.minimum-allocation-mb</name>
     <value><%= node['bcpc']['hadoop']['yarn']['scheduler']['minimum-allocation-mb'] %></value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.maximum-allocation-mb</name>
+    <value><%= node['bcpc']['hadoop']['yarn']['nodemanager']['avail_memory']['size'] or
+                   [1024, (node['memory']['total'].to_i * node['bcpc']['hadoop']['yarn']['nodemanager']['avail_memory']['ratio']/1024).floor].max %></value>
   </property>
 
   <property>
@@ -303,4 +310,22 @@
     <name>yarn.scheduler.fair.preemption</name>
     <value><%= node["bcpc"]["hadoop"]["yarn"]["scheduler"]["fair"]["preemption"] %></value>
   </property>
+
+  <property>
+    <name>yarn.nodemanager.vmem-check-enabled</name>
+    <value><%= node['bcpc']['hadoop']['yarn']['nodemanager']['vmem-check-enabled'] %></value>
+  </property>
+  <% if @hs_hosts.count > 0 %>
+  <property>
+    <name>yarn.log.server.url</name>
+    <value>http://<%="#{float_host(@hs_hosts.map{|i| i[:hostname] }.sort.first)}:19888" if not @hs_hosts.empty?%>/jobhistory/logs</value>
+  </property>
+  <% end %>
+
+  <property>
+    <name>yarn.timeline-service.client.max-retries</name>
+    <value><%= node['bcpc']['hadoop']['yarn']['timeline-service']['client']['max-retries'] %></value>
+  </property>
+
+
 </configuration>
