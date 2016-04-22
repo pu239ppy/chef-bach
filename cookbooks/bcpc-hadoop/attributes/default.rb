@@ -27,9 +27,8 @@ default["bcpc"]["hadoop"]["core"]["hadoop"]["user"]["group"]["static"]["mapping"
 default["bcpc"]["hadoop"]["core"]["hadoop"]["security"]["group"]["mapping"]["ldap"]["bind"]["password"]["file"] = "/etc/hadoop/conf/ldap-conn-pass.txt"
 default["bcpc"]["hadoop"]["core"]["hadoop"]["security"]["group"]["mapping"]["ldap"]["search"]["attr"]["member"] = "member"
 default["bcpc"]["hadoop"]["core"]["hadoop"]["security"]["group"]["mapping"]["ldap"]["search"]["attr"]["group"]["name"] = "cn"
-default["bcpc"]["hadoop"]["oozie"]["admins"] = []
-default["bcpc"]["hadoop"]["oozie"]["memory_opts"] = "-Xmx2048m -XX:MaxPermSize=256m"
-default["bcpc"]["hadoop"]["oozie"]["sharelib_checksum"] = nil
+default["bcpc"]["hadoop"]["hadoop"]["bin"]["path"] = "/usr/bin/hadoop"
+default["bcpc"]["hadoop"]["hadoop"]["config"]["dir"] = "/etc/hadoop/conf"
 default["bcpc"]["hadoop"]["hdfs"]["HA"] = false
 default["bcpc"]["hadoop"]["hdfs"]["failed_volumes_tolerated"] = 1
 default["bcpc"]["hadoop"]["hdfs"]["dfs_replication_factor"] = 3
