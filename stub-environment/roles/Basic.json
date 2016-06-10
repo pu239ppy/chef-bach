@@ -9,7 +9,8 @@
       "recipe[ubuntu]",
       "recipe[ntp]",
       "recipe[chef-client::delete_validation]",
-      "recipe[chef-client::config]"
+      "recipe[chef-client::config]",
+      "recipe[bcpc::chef_vault_install]"
     ],
     "description": "Basic server",
     "chef_type": "role",
