@@ -33,8 +33,7 @@ require 'thread'
 
 HOSTNAME_ATTR_SRCH_KEYS = {'hostname' => 'fqdn'}
 HOSTNAME_NODENO_ATTR_SRCH_KEYS = {'hostname' => 'fqdn',
-                                  'node_number' => 'bcpc.node_number',
-                                  'zookeeper_myid' => 'bcpc.hadoop.zookeeper.myid'}
+                                  'node_number' => 'bcpc.node_number'}
 MGMT_IP_ATTR_SRCH_KEYS = {'mgmt_ip' => 'bcpc.management.ip'}
 
 def init_config
