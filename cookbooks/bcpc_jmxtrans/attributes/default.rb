@@ -18,27 +18,19 @@ default['jmxtrans']['default_queries']['resourcemanager'] = [
   { 
     'obj' => "Hadoop:service=ResourceManager,name=ClusterMetrics*",
     'result_alias' => "ResourceManager",
-    'attr' => [ "NumActiveNMs" ]
+    'attr' => [ "NumActiveNMs", "NumLostNMs", "NumUnhealthyNMs", "AMLaunchDelayNumOps",
+                "AMLaunchDelayAvgTime", "AMRegisterDelayNumOps", "AMRegisterDelayAvgTime" ]
+  }, 
+  { 
+    'obj' => "Hadoop:service=ResourceManager,name=FSOpsDurations*",
+    'result_alias' => "ResourceManager",
+    'attr' => [ ]
   }, 
   {
     'type_name' => ["name", "q0", "user"],
     'obj' => "Hadoop:service=ResourceManager,name=QueueMetrics,q0=root,user=*",
     'result_alias' => "ResourceManager",
-    'attr' => [ 
-                "AppsRunning",                                  
-                "AppsPending",                                  
-                "AllocatedMB",                                  
-                "AllocatedVCores",                              
-                "AllocatedContainers",                          
-                "PendingMB",                                    
-                "PendingVCores",                                
-                "PendingContainers",                            
-                "ReservedMB",                                   
-                "ReservedVCores",                               
-                "ReservedContainers",                           
-                "ActiveUsers",                                  
-                "ActiveApplications"                            
-    ]           
+    'attr' => [ ]           
   }     
 ]
 default['jmxtrans']['default_queries']['zookeeper'] = [
