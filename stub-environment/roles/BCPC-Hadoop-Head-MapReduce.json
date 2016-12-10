@@ -6,6 +6,7 @@
   "run_list": [
     "role[Basic]",
     "recipe[bcpc-hadoop::historyserver]",
+    "recipe[back_spark::default]",
     "recipe[bcpc-hadoop::oozie]"
   ],
   "description": "A highly-available head node in a BCPC Hadoop cluster",
