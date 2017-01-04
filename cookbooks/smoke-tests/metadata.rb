@@ -1,0 +1,7 @@
+name 'smoke-tests'
+maintainer 'The Authors'
+maintainer_email 'you@example.com'
+license 'all_rights'
+description 'Installs/Configures smoke-tests'
+long_description 'Installs/Configures smoke-tests'
+version '0.1.0'
