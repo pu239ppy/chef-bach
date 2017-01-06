@@ -21,7 +21,8 @@
 # This will need to eventually be decoupled from bcpc-hadop
 
 test_user = node[:hadoop_smoke_tests][:oozie_user]
-workflow_path = node[:hadoop_smoke_tests][:hdfs_wf_path]
+test_user_home = node[:hadoop_smoke_tests][:home_path]
+workflow_path = "#{test_user_home}/#{node[:hadoop_smoke_tests][:hdfs_wf_path]}"
 
 ruby_block "collect_properties_data" do
   block do
@@ -54,6 +55,7 @@ execute "create HDFS workflow path #{workflow_path}" do
   command "hdfs dfs -mkdir -p #{workflow_path} "\
     && "hdfs dfs -chown -r #{test_user} #{workflow_path}"
   user 'hdfs'
+  not_if "hdfs dfs -test #{workflow_path}"
 end
 
 execute "upload workflow to #{workflow_path}" do
