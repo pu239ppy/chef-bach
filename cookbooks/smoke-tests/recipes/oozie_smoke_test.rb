@@ -1,6 +1,6 @@
 # vim: tabstop=2:shiftwidth=2:softtabstop=2 
 #
-# Cookbook Name:: smoke-test
+# Cookbook Name:: hadoop-smoke-tests
 # Recipe:: oozie_smoke_test
 #
 # Copyright 2016, Bloomberg Finance L.P.
@@ -65,6 +65,7 @@ end
 
 ruby_block 'submit oozie smoke test' do
   block do
+    include HadoopSmokeTests::OozieHelper
     submit_workflow_running_host("#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_job.properties")
   end
   user test_user
