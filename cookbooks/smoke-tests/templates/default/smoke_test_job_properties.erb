@@ -1,19 +1,19 @@
-fs.defaultFS=<%= @smoke.fs %>
-nameNode=<%= @smoke.fs %>
-mapreduce.jobtracker.address=<%= @smoke.rm %>
-jobTracker=<%= @smoke.rm %>
+fs.defaultFS=<%= @smoke['fs'] %>
+nameNode=<%= @smoke['fs'] %>
+mapreduce.jobtracker.address=<%= @smoke['rm'] %>
+jobTracker=<%= @smoke['rm'] %>
 queueName=default
 mapTasks=10
 reduceTasks=1
 oozie.use.system.libpath=true
 queueName=default
-oozie.wf.application.path=${fs.defaultFS}/user/${user.name}/examplesoozie/SmokeTest
+oozie.wf.application.path=<%= @smoke['wf_path'] %>
 inputDir=inputForPi
 outputDir=outputForPi
-metastoreUri=<%= @smoke.thrift_uris %>
-hMetastorePrinc=hive/_HOST@<%= @smoke.krb_realm %>
-hcMetastorePrinc=hive/_HOST@<%= @smoke.krb_realm %>
-hbMasterPrinc=hbase/_HOST@<%= @smoke.krb_realm %>
-hbRegionPrinc=hbase/_HOST@<%= @smoke.krb_realm %>
+metastoreUri=<%= @smoke['thrift_uris'] %>
+hMetastorePrinc=hive/_HOST@<%= @smoke['krb_realm'] %>
+hcMetastorePrinc=hive/_HOST@<%= @smoke['krb_realm'] %>
+hbMasterPrinc=hbase/_HOST@<%= @smoke['krb_realm'] %>
+hbRegionPrinc=hbase/_HOST@<%= @smoke['krb_realm'] %>
 ZKPort=2181
-ZKQuorum=<%= @smoke.zk_quorum %>
+ZKQuorum=<%= @smoke['zk_quorum'] %>

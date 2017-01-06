@@ -8,7 +8,7 @@ module HadoopSmokeTests
       cmd.exitstatus == 0 && cmd.stdout.include?('NORMAL')
     end
 
-    def submit_workflow(host, prop_file)
+    def submit_workflow(host, user, prop_file)
       oozie_cmd = "sudo -u #{user} oozie job -run -config #{prop_file}"
       cmd = Mixlib::Shellout.new(oozie_cmd, timeout: 20).run_command
       if cmd.exitstatus == 0
@@ -20,7 +20,7 @@ module HadoopSmokeTests
       cmd.exitstatus
     end
 
-    def submit_workflow_running_host(prop_file)
+    def submit_workflow_running_host(user, prop_file)
       operational_hosts =
         node[:bcpc][:hadoop][:oozie_hosts].select do 
           |oozie_host| oozie_running?(oozie_host) 
