@@ -22,17 +22,17 @@
 test_user = node[:hadoop_smoke_tests][:oozie_user]
 
 workflow_path = node[:hadoop_smoke_tests][:hdfs_wf_path]
-
+ 
 ruby_block "collect_properties_data" do
   block do
     chef_env = node.environment
     krb_realm = node[:bcpc][:hadoop][:kerberos][:realm]
-    resource_managers = node[:bcpc][:hadoop][:rm_hosts].map do |rms| rms.hostname end 
-    zookeeper_quorum = node[:bcpc][:hadoop][:zookeeper][:servers].map do |zks| zks.hostname end
+    resource_managers = node[:bcpc][:hadoop][:rm_hosts].map do |rms| float_host(rms.hostname) end
+    zookeeper_quorum = node[:bcpc][:hadoop][:zookeeper][:servers].map do |zks| float_host(zks.hostname) end
     fs = "hdfs://#{chef_env}"
     rm = if resource_managers.length > 1 then chef_env else resource_managers[0] end
     thrift_uris = node[:bcpc][:hadoop][:hive_hosts]
-      .map { |s| float_host(s[:hostname]) + ":9083" }.join(",")
+      .map { |s| 'thrift://' + float_host(s[:hostname]) + ':9083' }.join(",")
     node.run_state['smoke'] = {}
     node.run_state['smoke']['wf_path'] = workflow_path
     node.run_state['smoke']['rm'] = rm
