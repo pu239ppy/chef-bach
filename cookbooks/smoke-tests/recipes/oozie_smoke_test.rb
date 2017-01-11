@@ -19,10 +19,9 @@
 #
 # Collect all we need to generate a job.properties
 # This will need to eventually be decoupled from bcpc-hadop
-
 test_user = node[:hadoop_smoke_tests][:oozie_user]
-test_user_home = node[:hadoop_smoke_tests][:home_path]
-workflow_path = "#{test_user_home}/#{node[:hadoop_smoke_tests][:hdfs_wf_path]}"
+
+workflow_path = node[:hadoop_smoke_tests][:hdfs_wf_path]
 
 ruby_block "collect_properties_data" do
   block do
@@ -35,6 +34,7 @@ ruby_block "collect_properties_data" do
     thrift_uris = node[:bcpc][:hadoop][:hive_hosts]
       .map { |s| float_host(s[:hostname]) + ":9083" }.join(",")
     node.run_state['smoke'] = {}
+    node.run_state['smoke']['wf_path'] = workflow_path
     node.run_state['smoke']['rm'] = rm
     node.run_state['smoke']['fs'] = fs
     node.run_state['smoke']['thrift_uris'] = thrift_uris
@@ -54,6 +54,7 @@ end
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_job.properties" do
   source 'smoke_test_job_properties.erb'
   variables ( lazy {{smoke: node.run_state['smoke']}} )
+<<<<<<< HEAD
 end
 
 execute "create HDFS workflow path #{workflow_path}" do
@@ -66,11 +67,30 @@ end
 execute "upload workflow to #{workflow_path}" do
   command "hdfs dfs -copyFromLocal #{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_job.properties #{workflow_path}" 
   user test_user
+=======
+>>>>>>> oozie job submits but fails
 end
+
+execute "create HDFS workflow path #{workflow_path}" do
+  command "hdfs dfs -mkdir -p #{workflow_path}"
+  user 'hdfs'
+  not_if "hdfs dfs -test #{workflow_path}"
+end
+
+execute "upload workflow to #{workflow_path}" do
+  command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml #{workflow_path}/" 
+  user 'hdfs'
+  #not_if "hdfs dfs -test #{workflow_path}/workflow.xml", user: 'hdfs'
+end
+
+Chef::Resource::RubyBlock.send(:include, HadoopSmokeTests::OozieHelper)
 
 ruby_block 'submit oozie smoke test' do
   block do
+<<<<<<< HEAD
     include HadoopSmokeTests::OozieHelper
+=======
+>>>>>>> oozie job submits but fails
     submit_workflow_running_host(test_user, "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_job.properties")
   end
 end

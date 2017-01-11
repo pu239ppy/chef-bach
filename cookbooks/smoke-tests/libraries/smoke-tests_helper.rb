@@ -1,16 +1,17 @@
 # vim: tabstop=2:shiftwidth=2:softtabstop=2 
 module HadoopSmokeTests
   module OozieHelper
-    def oozie_running?(host)
-      oozie_url = "oozie admin -oozie http://#{host}:11000/oozie -status"
-      cmd = Mixlib::ShellOut.new( oozie_url, :timeout => 20).run_command
-      Chef::Log.debug("Oozie status: #{cmd.stdout}")
+    def oozie_running?(host, user)
+      oozie_cmd = "sudo -u #{user} oozie admin -oozie http://#{host}:11000/oozie -status"
+      Chef::Log.debug("Running oozie command #{oozie_cmd}")
+      cmd = Mixlib::ShellOut.new( oozie_cmd, :timeout => 20).run_command
+      Chef::Log.debug("Oozie status: #{cmd.stdout} #{cmd.stderr}")
       cmd.exitstatus == 0 && cmd.stdout.include?('NORMAL')
     end
 
     def submit_workflow(host, user, prop_file)
-      oozie_cmd = "sudo -u #{user} oozie job -run -config #{prop_file}"
-      cmd = Mixlib::Shellout.new(oozie_cmd, timeout: 20).run_command
+      oozie_cmd = "sudo -u #{user} oozie job -run -config #{prop_file} -oozie http://#{host}:11000/oozie"
+      cmd = Mixlib::ShellOut.new(oozie_cmd, timeout: 20).run_command
       if cmd.exitstatus == 0
         Chef::Log.debug("Job submission result: #{cmd.stdout}")
       else
@@ -23,10 +24,13 @@ module HadoopSmokeTests
     def submit_workflow_running_host(user, prop_file)
       operational_hosts =
         node[:bcpc][:hadoop][:oozie_hosts].select do 
-          |oozie_host| oozie_running?(oozie_host) 
+          |oozie_host| oozie_running?(float_host(oozie_host[:hostname]), user) 
         end
       if operational_hosts.length > 0 then
-        submit_workflow(operationl_hosts[0], user, prop_file)
+        Chef::Log.debug('Identified live oozie server(s) ' +  operational_hosts.to_s) 
+        submit_workflow(float_host(operational_hosts[0][:hostname]), user, prop_file)
+      else
+	Chef::Log.error('Unable to find a live oozie server')
       end
     end
   end
