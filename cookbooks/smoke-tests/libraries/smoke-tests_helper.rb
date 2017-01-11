@@ -30,7 +30,7 @@ module HadoopSmokeTests
         Chef::Log.debug('Identified live oozie server(s) ' +  operational_hosts.to_s) 
         submit_workflow(float_host(operational_hosts[0][:hostname]), user, prop_file)
       else
-	Chef::Log.error('Unable to find a live oozie server')
+	      Chef::Log.error('Unable to find a live oozie server')
       end
     end
   end
