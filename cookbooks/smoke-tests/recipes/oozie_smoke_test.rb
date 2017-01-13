@@ -19,8 +19,8 @@
 #
 # Collect all we need to generate a job.properties
 # This will need to eventually be decoupled from bcpc-hadop
-test_user = node[:hadoop_smoke_tests][:oozie_user]
 
+test_user = node[:hadoop_smoke_tests][:oozie_user]
 workflow_path = node[:hadoop_smoke_tests][:hdfs_wf_path]
  
 ruby_block "collect_properties_data" do
@@ -39,8 +39,7 @@ ruby_block "collect_properties_data" do
     node.run_state['smoke']['fs'] = fs
     node.run_state['smoke']['thrift_uris'] = thrift_uris
     node.run_state['smoke']['krb_realm'] = krb_realm
-    node.run_state['smoke']['zk_quorum'] = zookeeper_quorum
-    node.run_state['smoke']['wf_path'] = workflow_path 
+    node.run_state['smoke']['zk_quorum'] = zookeeper_quorum.join(",")
   end
 end
 
