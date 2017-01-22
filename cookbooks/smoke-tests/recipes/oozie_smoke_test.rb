@@ -52,7 +52,7 @@ end
 
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_job.properties" do
   source 'smoke_test_job_properties.erb'
-  variables ( lazy {{smoke: node.run_state['smoke']}} )
+  variables ( {smoke: node['hadoop_smoke_tests']} )
 end
 
 execute "create HDFS workflow path #{workflow_path}" do
