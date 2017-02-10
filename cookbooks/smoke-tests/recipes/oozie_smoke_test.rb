@@ -83,7 +83,7 @@ execute "upload coordinator to #{coordinator_path}" do
 end
 
 execute "upload workflow to #{workflow_path}" do
-  command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml #{workflow_path}/" 
+  command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml #{workflow_path}" 
   user test_user
 end
 
