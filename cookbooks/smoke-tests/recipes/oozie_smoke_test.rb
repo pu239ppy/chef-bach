@@ -1,4 +1,4 @@
-# vim: tabstop=-1:shiftwidth=2:softtabstop=2 
+# vim: tabstop=2:shiftwidth=2:softtabstop=2 
 #
 # Cookbook Name:: hadoop-smoke-tests
 # Recipe:: oozie_smoke_test
@@ -20,8 +20,9 @@
 # Collect all we need to generate a job.properties
 # This will need to eventually be decoupled from bcpc-hadop
 
-test_user = node[:hadoop_smoke_tests][:oozie_user]
-workflow_path = node[:hadoop_smoke_tests][:hdfs_wf_path]
+test_user = node['hadoop_smoke_tests']['oozie_user']
+workflow_path = node['hadoop_smoke_tests']['wf_path']
+coordinator_path = node['hadoop_smoke_tests']['co_path']
  
 #ruby_block "collect_properties_data" do
 #  block do
@@ -50,9 +51,24 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml" do
   source 'smoke_test_xml.erb'
 end
 
-template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_job.properties" do
-  source 'smoke_test_job_properties.erb'
-  variables ( {smoke: node['hadoop_smoke_tests']} )
+file "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.props" 
+  contents "oozie.coord.application.path=#{node['hadoop_smoke_tests']['co_path']}"
+
+template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml" do
+  source 'coordinator.xml.erb'
+  variables ( {
+                appname: 'Oozie-Smoke-Test-Coordinator',
+                properties: node['hadoop_smoke_tests']['wf'],
+                workflow: workflow_path,
+                frequency: '${coord:minutes(10)}'
+              } )
+end
+
+execute "create HDFS coordinator path #{coordinator_path}" do
+  command "hdfs dfs -mkdir -p #{coordinator_path} "\
+    && "hdfs dfs -chown #{test_user} #{coordinator_path}"
+  user 'hdfs'
+  not_if "hdfs dfs -test #{workflow_path}"
 end
 
 execute "create HDFS workflow path #{workflow_path}" do
@@ -62,14 +78,14 @@ execute "create HDFS workflow path #{workflow_path}" do
   not_if "hdfs dfs -test #{workflow_path}"
 end
 
-execute "upload workflow to #{workflow_path}" do
-  command "hdfs dfs -copyFromLocal #{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_job.properties #{workflow_path}" 
+execute "upload coordinator to #{coordinator_path}" do
+  command "hdfs dfs -copyFromLocal #{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml #{workflow_path}" 
   user test_user
 end
 
 execute "upload workflow to #{workflow_path}" do
   command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml #{workflow_path}/" 
-  user 'hdfs'
+  user test_user
 end
 
 Chef::Resource::RubyBlock.send(:include, HadoopSmokeTests::OozieHelper)

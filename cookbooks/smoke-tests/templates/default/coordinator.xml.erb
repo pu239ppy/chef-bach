@@ -1,6 +1,6 @@
-<cordinator-app name="<%= node[:hdfsdu][:coordinator_job_name] %>" 
-   frequency="${freq}" 
-   start="${startTime}" end="${endTime}" timezone="${timezone}" 
+<cordinator-app name="<%= @appname %>" 
+   frequency="<%= @frequency %>" 
+   start="2017-01-01T08:00Z" end="2027-01-01T08:00Z" timezone="America/New_York" 
    xmlns="uri:oozie:coordinator:0.1">
 
    <controls>
@@ -10,9 +10,9 @@
 
    <action>
       <workflow>
-         <app-path>${workflowAppPath}</app-path>
+         <app-path><%= workflow %></app-path>
          <configuration>
-           <% (@options || {}).each do |name, value| %>
+           <% (@properties || {}).each do |name, value| %>
              <name><%= name.to_s.encode(:xml => :text) %></name>
              <value><%= value.to_s.encode(:xml => :text) %></value>
            <% end %>
