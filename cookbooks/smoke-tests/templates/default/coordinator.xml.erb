@@ -1,0 +1,22 @@
+<cordinator-app name="<%= node[:hdfsdu][:coordinator_job_name] %>" 
+   frequency="${freq}" 
+   start="${startTime}" end="${endTime}" timezone="${timezone}" 
+   xmlns="uri:oozie:coordinator:0.1">
+
+   <controls>
+      <concurrency>1</concurrency>
+      <execution>FIFO</execution>
+   </controls>
+
+   <action>
+      <workflow>
+         <app-path>${workflowAppPath}</app-path>
+         <configuration>
+           <% (@options || {}).each do |name, value| %>
+             <name><%= name.to_s.encode(:xml => :text) %></name>
+             <value><%= value.to_s.encode(:xml => :text) %></value>
+           <% end %>
+         </configuration>
+      </workflow>
+   </action>
+</coordinator-app>
