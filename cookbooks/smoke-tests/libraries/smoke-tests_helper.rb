@@ -23,7 +23,7 @@ module HadoopSmokeTests
 
     def submit_workflow_running_host(user, prop_file)
       operational_hosts =
-        node[:bcpc][:hadoop][:oozie_hosts].select do 
+        node['hadoop_smoke_tests']['oozie_hosts'].select do 
           |oozie_host| test_oozie_running?(oozie_host, user) 
         end
       if operational_hosts.length > 0 then

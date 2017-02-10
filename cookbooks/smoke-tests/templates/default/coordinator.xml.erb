@@ -1,4 +1,4 @@
-<cordinator-app name="<%= @appname %>" 
+<coordinator-app name="<%= @appname %>" 
    frequency="<%= @frequency %>" 
    start="2017-01-01T08:00Z" end="2027-01-01T08:00Z" timezone="America/New_York" 
    xmlns="uri:oozie:coordinator:0.1">
@@ -13,8 +13,10 @@
          <app-path><%= @workflow %></app-path>
          <configuration>
            <% (@properties || {}).each do |name, value| %>
+           <property>
              <name><%= name.to_s.encode(:xml => :text) %></name>
              <value><%= value.to_s.encode(:xml => :text) %></value>
+           </property>
            <% end %>
          </configuration>
       </workflow>

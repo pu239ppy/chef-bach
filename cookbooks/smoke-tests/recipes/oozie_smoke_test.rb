@@ -23,6 +23,7 @@
 test_user = node['hadoop_smoke_tests']['oozie_user']
 workflow_path = node['hadoop_smoke_tests']['wf_path']
 coordinator_path = node['hadoop_smoke_tests']['co_path']
+app_name = node['hadoop_smoke_tests']['app_name']
  
 #ruby_block "collect_properties_data" do
 #  block do
@@ -51,14 +52,14 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml" do
   source 'smoke_test_xml.erb'
 end
 
-file "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.props" do
+file "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.properties" do
   content "oozie.coord.application.path=#{node['hadoop_smoke_tests']['co_path']}"
 end
 
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml" do
   source 'coordinator.xml.erb'
   variables ( {
-                appname: 'Oozie-Smoke-Test-Coordinator',
+                appname: app_name,
                 properties: node['hadoop_smoke_tests']['wf'],
                 workflow: workflow_path,
                 frequency: '${coord:minutes(10)}'
@@ -67,18 +68,18 @@ end
 
 execute "create HDFS coordinator path #{coordinator_path}" do
   command "hdfs dfs -mkdir -p #{coordinator_path}"
-  user ubuntu
-  not_if "hdfs dfs -test #{coordinator_path}"
+  user test_user
+  not_if "hdfs dfs -test -d #{coordinator_path}"
 end
 
 execute "create HDFS workflow path #{workflow_path}" do
   command "hdfs dfs -mkdir -p #{workflow_path}"
-  user ubuntu
-  not_if "hdfs dfs -test #{workflow_path}"
+  user test_user
+  not_if "hdfs dfs -test -d #{workflow_path}"
 end
 
 execute "upload coordinator to #{coordinator_path}" do
-  command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml #{workflow_path}" 
+  command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml #{coordinator_path}" 
   user test_user
 end
 
@@ -91,6 +92,7 @@ Chef::Resource::RubyBlock.send(:include, HadoopSmokeTests::OozieHelper)
 
 ruby_block 'submit oozie smoke test' do
   block do
-    submit_workflow_running_host(test_user, "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.props")
+    submit_workflow_running_host(test_user, "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.properties")
   end
+  not_if "oozie jobs -jobtype coordinator | grep -q #{app_name}", user: test_user
 end
