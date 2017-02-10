@@ -91,6 +91,6 @@ Chef::Resource::RubyBlock.send(:include, HadoopSmokeTests::OozieHelper)
 
 ruby_block 'submit oozie smoke test' do
   block do
-    submit_workflow_running_host(test_user, "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_job.properties")
+    submit_workflow_running_host(test_user, "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.props")
   end
 end
