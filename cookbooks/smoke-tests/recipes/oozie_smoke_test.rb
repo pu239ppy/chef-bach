@@ -52,7 +52,7 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml" do
 end
 
 file "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.props" 
-  contents "oozie.coord.application.path=#{node['hadoop_smoke_tests']['co_path']}"
+  content "oozie.coord.application.path=#{node['hadoop_smoke_tests']['co_path']}"
 
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml" do
   source 'coordinator.xml.erb'
