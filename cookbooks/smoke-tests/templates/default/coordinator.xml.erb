@@ -10,7 +10,7 @@
 
    <action>
       <workflow>
-         <app-path><%= workflow %></app-path>
+         <app-path><%= @workflow %></app-path>
          <configuration>
            <% (@properties || {}).each do |name, value| %>
              <name><%= name.to_s.encode(:xml => :text) %></name>
