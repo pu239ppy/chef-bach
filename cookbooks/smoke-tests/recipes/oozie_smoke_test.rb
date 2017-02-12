@@ -94,5 +94,10 @@ ruby_block 'submit oozie smoke test' do
   block do
     submit_workflow_running_host(test_user, "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.properties")
   end
-  not_if "oozie jobs -jobtype coordinator | grep -q #{app_name}", user: test_user
+  not_if do 
+    status = submit_command_running_host(
+      test_user, "jobs -jobtype coordinator") || ""
+    status.include? app_name and 
+      status.include? "RUNNING" 
+  end
 end
