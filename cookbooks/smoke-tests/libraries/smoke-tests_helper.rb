@@ -9,7 +9,7 @@ module HadoopSmokeTests
       cmd.exitstatus == 0 && cmd.stdout.include?('NORMAL')
     end
 
-    def find_working_server(oozie_hosts):
+    def find_working_server(oozie_hosts, user)
       oozie_hosts.select do 
           |oozie_host| test_oozie_running?(oozie_host, user) 
       end
@@ -29,7 +29,7 @@ module HadoopSmokeTests
 
     def submit_workflow_running_host(user, prop_file)
       operational_hosts = 
-        find_working_server(node['hadoop_smoke_tests']['oozie_hosts'])
+        find_working_server(node['hadoop_smoke_tests']['oozie_hosts'], user)
       if operational_hosts.length > 0 then
         Chef::Log.debug('Identified live oozie server(s) ' +  operational_hosts.to_s) 
         submit_workflow(operational_hosts[0], user, prop_file)
@@ -40,7 +40,7 @@ module HadoopSmokeTests
     
     def submit_command_running_host(user, command)
         operational_hosts = 
-          find_working_server(node['hadoop_smoke_tests']['oozie_hosts'])
+          find_working_server(node['hadoop_smoke_tests']['oozie_hosts'], user)
       if operational_hosts.length > 0 then
         Chef::Log.debug('Identified live oozie server(s) ' +  operational_hosts.to_s) 
         
