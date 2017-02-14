@@ -42,6 +42,7 @@ module HadoopSmokeTests
     # if there is nothing else to return we always 
     # return an empty string, this way we can still
     # examine contents and always return one thing
+    # while providing a type guarantee of some sort
     def submit_command_running_host(user, command)
         operational_hosts = 
           find_working_server(node['hadoop_smoke_tests']['oozie_hosts'], user)

@@ -96,7 +96,7 @@ ruby_block 'submit oozie smoke test' do
   end
   not_if do 
     status = submit_command_running_host(
-      test_user, "jobs -jobtype coordinator") || ""
+      test_user, "jobs -jobtype coordinator")
     status.include? app_name and 
       status.include? "RUNNING" 
   end
