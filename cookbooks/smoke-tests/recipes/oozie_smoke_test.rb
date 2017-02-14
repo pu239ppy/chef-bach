@@ -17,8 +17,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Collect all we need to generate a job.properties
-# This will need to eventually be decoupled from bcpc-hadop
 
 test_user = node['hadoop_smoke_tests']['oozie_user']
 workflow_path = node['hadoop_smoke_tests']['wf_path']
@@ -52,15 +50,16 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml" do
   source 'smoke_test_xml.erb'
 end
 
-file "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.properties" do
-  content "oozie.coord.application.path=#{node['hadoop_smoke_tests']['co_path']}"
+template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.properties" do
+   source 'smoke_test_job_properties.erb'
+   variables ( {smoke: node['hadoop_smoke_tests']['wf']} )
 end
 
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml" do
   source 'coordinator.xml.erb'
   variables ( {
                 appname: app_name,
-                properties: node['hadoop_smoke_tests']['wf'],
+                #properties: node['hadoop_smoke_tests']['wf'],
                 workflow: workflow_path,
                 frequency: '${coord:minutes(10)}'
               } )

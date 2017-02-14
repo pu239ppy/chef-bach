@@ -11,14 +11,14 @@
    <action>
       <workflow>
          <app-path><%= @workflow %></app-path>
-         <configuration>
+     <!-- <configuration>
            <% (@properties || {}).each do |name, value| %>
            <property>
              <name><%= name.to_s.encode(:xml => :text) %></name>
              <value><%= value.to_s.encode(:xml => :text) %></value>
            </property>
-           <% end %>
-         </configuration>
+           <% end %> 
+         </configuration> -->
       </workflow>
    </action>
 </coordinator-app>

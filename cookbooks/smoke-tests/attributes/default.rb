@@ -2,10 +2,10 @@
 default['hadoop_smoke_tests'] = {}
 default['hadoop_smoke_tests']['app_name'] = 'Oozie-Smoke-Test-Coordinator'
 default['hadoop_smoke_tests']['oozie_hosts'] = ['f-bcpc-vm2.bcpc.example.com']
-default['hadoop_smoke_tests']['co_path'] = 'hdfs://Test-Laptop/user/ubuntu/oozie-smoke-tests/co'
 default['hadoop_smoke_tests']['oozie_user'] = 'ubuntu'
 default['hadoop_smoke_tests']['wf_path'] = 'hdfs://Test-Laptop/user/ubuntu/oozie-smoke-tests/wf'
 default['hadoop_smoke_tests']['secure_cluster'] = true
+default['hadoop_smoke_tests']['wf']['co_path'] = 'hdfs://Test-Laptop/user/ubuntu/oozie-smoke-tests/co'
 default['hadoop_smoke_tests']['wf']['krb5_realm'] = 'BCPC.EXAMPLE.COM'
 default['hadoop_smoke_tests']['wf']['rm'] = 'f-bcpc-vm2.bcpc.example.com'
 default['hadoop_smoke_tests']['wf']['fs'] = 'hdfs://Test-Laptop'
