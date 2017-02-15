@@ -20,7 +20,7 @@
 
 test_user = node['hadoop_smoke_tests']['oozie_user']
 workflow_path = node['hadoop_smoke_tests']['wf_path']
-coordinator_path = node['hadoop_smoke_tests']['co_path']
+coordinator_path = node['hadoop_smoke_tests']['wf']['co_path']
 app_name = node['hadoop_smoke_tests']['app_name']
  
 #ruby_block "collect_properties_data" do
@@ -85,6 +85,14 @@ end
 execute "upload workflow to #{workflow_path}" do
   command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml #{workflow_path}" 
   user test_user
+end
+
+bash "HBASE permission for #{test_user}" do
+  code <<-EOH
+    kinit -kt /etc/security/keytabs/hbase.service.keytab hbase/#{float_host(node[:fqdn])}
+    echo "grant '#{test_user}', 'RWCAX'" | hbase shell
+    EOH
+  user "hbase"
 end
 
 Chef::Resource::RubyBlock.send(:include, HadoopSmokeTests::OozieHelper)
