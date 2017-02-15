@@ -44,12 +44,12 @@ module HadoopSmokeTests
     # examine contents and always return one thing
     # while providing a type guarantee of some sort
     def submit_command_running_host(user, command)
-        operational_hosts = 
-          find_working_server(node['hadoop_smoke_tests']['oozie_hosts'], user)
+      operational_hosts = 
+        find_working_server(node['hadoop_smoke_tests']['oozie_hosts'], user)
       if operational_hosts.length > 0 then
         Chef::Log.debug('Identified live oozie server(s) ' +  operational_hosts.to_s) 
         
-        oozie_cmd = "sudo -u #{user} oozie #{command} -oozie http://#{operationl_hosts[0]}:11000/oozie"
+        oozie_cmd = "sudo -u #{user} oozie #{command} -oozie http://#{operational_hosts[0]}:11000/oozie"
         cmd = Mixlib::ShellOut.new(oozie_cmd, timeout: 20).run_command
         if cmd.exitstatus == 0
           Chef::Log.debug("Command submission result: #{cmd.stdout}")
