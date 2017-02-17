@@ -163,8 +163,15 @@
       <argument>shell</argument>
       <argument>-n</argument>
     </shell>
-      <ok to="end"/>
+      <ok to="report-success-zabbix"/>
       <error to="fail"/>
+  </action>
+  <action name="report-success-zabbix">
+    <shell xmlns="uri:oozie:shell-action:0.1">
+      <job-tracker>${jobTracker}</job-tracker>
+      <name-node>${nameNode}</name-node>
+      <exec>cat "bach.smoke-test.completed 1 `date +%s`" | n c</exec>
+    </shell>
   </action>
   <kill name="fail">
     <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
