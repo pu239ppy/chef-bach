@@ -23,6 +23,8 @@ workflow_path = node['hadoop_smoke_tests']['wf_path']
 coordinator_path = node['hadoop_smoke_tests']['wf']['co_path']
 app_name = node['hadoop_smoke_tests']['app_name']
  
+# TODO: move below into a wrapper 
+# this belongs in a wraper cookbook, also this block needs to discover graphite ip
 #ruby_block "collect_properties_data" do
 #  block do
 #    chef_env = node.environment
@@ -87,6 +89,14 @@ execute "upload workflow to #{workflow_path}" do
   user test_user
 end
 
+template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.sh" do
+  source "send_to_graohite_sh_rb"
+  variables ( { carbon_receiver: node['hadoop_smoke_tests']['carbon-line-receiver'],
+                carbon_port: node['hadoop_smoke_tests']['carbon-line-port']
+              })
+end
+
+# TODO: Move below into a wrapper
 bash "HBASE permission for #{test_user}" do
   code <<-EOH
     kinit -kt /etc/security/keytabs/hbase.service.keytab hbase/#{float_host(node[:fqdn])}

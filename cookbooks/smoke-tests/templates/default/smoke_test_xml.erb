@@ -170,7 +170,8 @@
     <shell xmlns="uri:oozie:shell-action:0.1">
       <job-tracker>${jobTracker}</job-tracker>
       <name-node>${nameNode}</name-node>
-      <exec>cat "bach.smoke-test.completed 1 `date +%s`" | n c</exec>
+      <exec>send_to_graphite.sh</exec>
+      <file>send_to_graphite.sh#send_to_graphite.sh</file>
     </shell>
   </action>
   <kill name="fail">
