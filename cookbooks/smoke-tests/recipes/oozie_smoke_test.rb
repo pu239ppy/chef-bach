@@ -90,7 +90,7 @@ execute "upload workflow to #{workflow_path}" do
 end
 
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.sh" do
-  source "send_to_graohite_sh_rb"
+  source "send_to_graphite_sh_rb"
   variables ( { carbon_receiver: node['hadoop_smoke_tests']['carbon-line-receiver'],
                 carbon_port: node['hadoop_smoke_tests']['carbon-line-port']
               })
