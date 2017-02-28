@@ -97,7 +97,7 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.s
 end
 
 execute "upload send_to_graphite.sh" do
-  command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.sh"
+  command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.sh #{workflow_path}"
   user test_user
 end
 
