@@ -5,20 +5,12 @@
 
    <controls>
       <concurrency>1</concurrency>
-      <execution>NONE</execution>
+      <execution>LAST_ONLY</execution>
    </controls>
 
    <action>
       <workflow>
          <app-path><%= @workflow %></app-path>
-     <!-- <configuration>
-           <% (@properties || {}).each do |name, value| %>
-           <property>
-             <name><%= name.to_s.encode(:xml => :text) %></name>
-             <value><%= value.to_s.encode(:xml => :text) %></value>
-           </property>
-           <% end %> 
-         </configuration> -->
       </workflow>
    </action>
 </coordinator-app>
