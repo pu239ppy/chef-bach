@@ -173,6 +173,8 @@
       <exec>send_to_graphite.sh</exec>
       <file>send_to_graphite.sh#send_to_graphite.sh</file>
     </shell>
+      <ok to="end"/>
+      <error to="fail"/>
   </action>
   <kill name="fail">
     <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
