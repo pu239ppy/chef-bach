@@ -101,6 +101,11 @@ execute "upload send_to_graphite.sh" do
   user test_user
 end
 
+execute "chmod send_to_graphite.sh" do
+  command "hdfs dfs -chmod u+x #{workflow_path}/send_to_graphite.sh"
+  user test_user
+end
+
 # TODO: Move below into a wrapper
 bash "HBASE permission for #{test_user}" do
   code <<-EOH
