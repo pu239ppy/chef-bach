@@ -1,2 +1,0 @@
-echo "bach.oozie-smoke-test.result 1 `date +%s`" | nc -vC <%= @carbon_receiver @carbon_port %>
-echo "Result is ${?}"
