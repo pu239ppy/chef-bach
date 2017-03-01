@@ -4,7 +4,6 @@ default['hadoop_smoke_tests']['app_name'] = 'Oozie-Smoke-Test-Coordinator'
 default['hadoop_smoke_tests']['oozie_hosts'] = ['f-bcpc-vm2.bcpc.example.com']
 default['hadoop_smoke_tests']['oozie_user'] = 'ubuntu'
 default['hadoop_smoke_tests']['wf_path'] = 'hdfs://Test-Laptop/user/ubuntu/oozie-smoke-tests/wf'
-default['hadoop_smoke_tests']['secure_cluster'] = true
 default['hadoop_smoke_tests']['carbon-line-receiver'] = "10.0.100.5"
 default['hadoop_smoke_tests']['carbon-line-port'] = 2013
 default['hadoop_smoke_tests']['wf']['co_path'] = 'hdfs://Test-Laptop/user/ubuntu/oozie-smoke-tests/co'
