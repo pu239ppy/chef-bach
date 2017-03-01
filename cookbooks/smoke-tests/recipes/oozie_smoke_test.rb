@@ -23,28 +23,6 @@ workflow_path = node['hadoop_smoke_tests']['wf_path']
 coordinator_path = node['hadoop_smoke_tests']['wf']['co_path']
 app_name = node['hadoop_smoke_tests']['app_name']
  
-# TODO: move below into a wrapper 
-# this belongs in a wraper cookbook, also this block needs to discover graphite ip
-#ruby_block "collect_properties_data" do
-#  block do
-#    chef_env = node.environment
-#    krb_realm = node[:bcpc][:hadoop][:kerberos][:realm]
-#    resource_managers = node[:bcpc][:hadoop][:rm_hosts].map do |rms| float_host(rms.hostname) end
-#    zookeeper_quorum = node[:bcpc][:hadoop][:zookeeper][:servers].map do |zks| float_host(zks.hostname) end
-#    fs = "hdfs://#{chef_env}"
-#    rm = if resource_managers.length > 1 then chef_env else resource_managers[0] end
-#    thrift_uris = node[:bcpc][:hadoop][:hive_hosts]
-#      .map { |s| 'thrift://' + float_host(s[:hostname]) + ':9083' }.join(",")
-#    node.run_state['smoke'] = {}
-#    node.run_state['smoke']['wf_path'] = workflow_path
-#    node.run_state['smoke']['rm'] = rm
-#    node.run_state['smoke']['fs'] = fs
-#    node.run_state['smoke']['thrift_uris'] = thrift_uris
-#    node.run_state['smoke']['krb_realm'] = krb_realm
-#    node.run_state['smoke']['zk_quorum'] = zookeeper_quorum.join(",")
-#  end
-#end
-
 directory "#{Chef::Config['file_cache_path']}/oozie-smoke-test" do
 end
 
@@ -103,15 +81,6 @@ execute "upload send_to_graphite.sh" do
   command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.sh #{workflow_path}"
   user test_user
   action :nothing
-end
-
-# TODO: Move below into a wrapper
-bash "HBASE permission for #{test_user}" do
-  code <<-EOH
-    kinit -kt /etc/security/keytabs/hbase.service.keytab hbase/#{float_host(node[:fqdn])}
-    echo "grant '#{test_user}', 'RWCAX'" | hbase shell
-    EOH
-  user "hbase"
 end
 
 Chef::Resource::RubyBlock.send(:include, HadoopSmokeTests::OozieHelper)
