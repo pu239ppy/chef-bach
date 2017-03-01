@@ -53,18 +53,19 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml" do
 end
 
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.properties" do
-   source 'smoke_test_job_properties.erb'
-   variables ( {smoke: node['hadoop_smoke_tests']['wf']} )
+  source 'smoke_test_job_properties.erb'
+  variables ( {smoke: node['hadoop_smoke_tests']['wf']} )
+  notifies :run, "execute[upload workflow to #{workflow_path}", :immediately
 end
 
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml" do
   source 'coordinator.xml.erb'
   variables ( {
                 appname: app_name,
-                #properties: node['hadoop_smoke_tests']['wf'],
                 workflow: workflow_path,
                 frequency: '${coord:minutes(10)}'
               } )
+  notifies :run, "execute[upload coordinator to #{coordinator_path}", :immediately
 end
 
 execute "create HDFS coordinator path #{coordinator_path}" do
@@ -82,6 +83,7 @@ end
 execute "upload coordinator to #{coordinator_path}" do
   command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml #{coordinator_path}" 
   user test_user
+  action :nothing
 end
 
 execute "upload workflow to #{workflow_path}" do
@@ -94,11 +96,13 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.s
   variables ( { carbon_receiver: node['hadoop_smoke_tests']['carbon-line-receiver'],
                 carbon_port: node['hadoop_smoke_tests']['carbon-line-port']
               })
+  notifies :run, "execute[upload send_to_graphite.sh", :immediately
 end
 
 execute "upload send_to_graphite.sh" do
   command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.sh #{workflow_path}"
   user test_user
+  action :nothing
 end
 
 # TODO: Move below into a wrapper
@@ -120,6 +124,7 @@ ruby_block 'submit oozie smoke test' do
     status = submit_command_running_host(
       test_user, "jobs -jobtype coordinator")
     status.include? app_name and 
-      status.include? "RUNNING" 
+      status.include? "RUNNING" and 
+      status != ""
   end
 end
