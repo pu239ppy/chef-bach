@@ -43,7 +43,7 @@ ruby_block "collect_properties_data" do
       .map { |s| 'thrift://' + float_host(s[:hostname]) + ':9083' }.join(",")
     node.default['hadoop_smoke_tests']['carbon-line-receiver'] = node[:bcpc][:graphite][:ip]
     node.default['hadoop_smoke_tests']['carbon-line-port'] = node[:bcpc][:graphite][:relay_port]
-    node.default['hadoop_smoke_tests']['oozie_hosts'] = node[:bcpc][:hadoop][:oozie_hosts].map do | entry | entry['hostname'] end
+    node.default['hadoop_smoke_tests']['oozie_hosts'] = node[:bcpc][:hadoop][:oozie_hosts].map do | entry | float_host(entry['hostname']) end
     node.default['hadoop_smoke_tests']['wf_path'] = "hdfs://Test-Laptop/user/#{test_user}/oozie-smoke-tests/wf"
     node.default['hadoop_smoke_tests']['wf']['co_path'] = "hdfs://Test-Laptop/user/#{test_user}/oozie-smoke-tests/co"
     node.default['hadoop_smoke_tests']['wf']['rm'] = rm
