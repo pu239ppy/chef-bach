@@ -28,7 +28,8 @@ bash "HBASE permission for #{test_user}" do
   user "hbase"
 end
 
-# init test_user credentials
+# init test_user credentials 
+
 
 ruby_block "collect_properties_data" do
   block do
