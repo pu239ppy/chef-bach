@@ -33,7 +33,8 @@ end
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.properties" do
   source 'smoke_test_job_properties.erb'
   variables ( {smoke: node['hadoop_smoke_tests']['wf']} )
-  notifies :run, "execute[upload workflow to #{workflow_path}", :immediately
+  notifies :run, "execute[create HDFS workflow path #{workflow_path}]", :immediately
+  notifies :run, "execute[upload workflow to #{workflow_path}]", :immediately
 end
 
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml" do
@@ -43,19 +44,18 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml" d
                 workflow: workflow_path,
                 frequency: '${coord:minutes(10)}'
               } )
-  notifies :run, "execute[upload coordinator to #{coordinator_path}", :immediately
+  notifies :run, "execute[create HDFS coordinator path #{coordinator_path}]", :immediately
+  notifies :run, "execute[upload coordinator to #{coordinator_path}]", :immediately
 end
 
 execute "create HDFS coordinator path #{coordinator_path}" do
   command "hdfs dfs -mkdir -p #{coordinator_path}"
   user test_user
-  not_if "hdfs dfs -test -d #{coordinator_path}"
 end
 
 execute "create HDFS workflow path #{workflow_path}" do
   command "hdfs dfs -mkdir -p #{workflow_path}"
   user test_user
-  not_if "hdfs dfs -test -d #{workflow_path}"
 end
 
 execute "upload coordinator to #{coordinator_path}" do
@@ -74,7 +74,7 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.s
   variables ( { carbon_receiver: node['hadoop_smoke_tests']['carbon-line-receiver'],
                 carbon_port: node['hadoop_smoke_tests']['carbon-line-port']
               })
-  notifies :run, "execute[upload send_to_graphite.sh", :immediately
+  notifies :run, "execute[upload send_to_graphite.sh]", :immediately
 end
 
 execute "upload send_to_graphite.sh" do
@@ -93,7 +93,7 @@ ruby_block 'submit oozie smoke test' do
     status = submit_command_running_host(
       test_user, "jobs -jobtype coordinator")
     status.include? app_name and 
-      status.include? "RUNNING" and 
-      status != ""
+      status.include? "RUNNING" or 
+      status == ""
   end
 end
