@@ -33,8 +33,6 @@ end
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.properties" do
   source 'smoke_test_job_properties.erb'
   variables ( {smoke: node['hadoop_smoke_tests']['wf']} )
-  notifies :run, "execute[create HDFS workflow path #{workflow_path}]", :immediately
-  notifies :run, "execute[upload workflow to #{workflow_path}]", :immediately
 end
 
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml" do
@@ -44,8 +42,6 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml" d
                 workflow: workflow_path,
                 frequency: '${coord:minutes(10)}'
               } )
-  notifies :run, "execute[create HDFS coordinator path #{coordinator_path}]", :immediately
-  notifies :run, "execute[upload coordinator to #{coordinator_path}]", :immediately
 end
 
 execute "create HDFS coordinator path #{coordinator_path}" do
@@ -61,12 +57,13 @@ end
 execute "upload coordinator to #{coordinator_path}" do
   command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml #{coordinator_path}" 
   user test_user
-  action :nothing
+  not_if "hdfs dfs -test -f #{coordinator_path}/coordinator.xml", :user => test_user
 end
 
 execute "upload workflow to #{workflow_path}" do
   command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/workflow.xml #{workflow_path}" 
   user test_user
+  not_if "hdfs dfs -test -f #{workflow_path}/workflow.xml", :user => test_user
 end
 
 template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.sh" do
@@ -74,13 +71,13 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.s
   variables ( { carbon_receiver: node['hadoop_smoke_tests']['carbon-line-receiver'],
                 carbon_port: node['hadoop_smoke_tests']['carbon-line-port']
               })
-  notifies :run, "execute[upload send_to_graphite.sh]", :immediately
 end
 
 execute "upload send_to_graphite.sh" do
   command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.sh #{workflow_path}"
   user test_user
   action :nothing
+  not_if "hdfs dfs -test -f #{workflow_path}/send_to_graphite.sh"
 end
 
 Chef::Resource::RubyBlock.send(:include, HadoopSmokeTests::OozieHelper)
