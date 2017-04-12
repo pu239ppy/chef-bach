@@ -18,23 +18,48 @@
 # limitations under the License.
 #
 
+require 'base64'
+
+krb_realm = node[:bcpc][:hadoop][:kerberos][:realm]
 test_user = node['hadoop_smoke_tests']['oozie_user']
+tester_princ = "test_user@#{krb_realm}"
+tester_keytab = get_config('password', 'test_user_keytab', 'os')
 
 # Permissions test user to access HBase and get DTs
 bash "HBASE permission for #{test_user}" do
   code <<-EOH
   echo "grant '#{test_user}', 'RWCAX'" | hbase shell
   EOH
-  user "hbase"
+  user 'hbase'
+end
+
+# create a local user and group if needed
+user test_user do
+  comment 'hadoop smoke test executer'
+  only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
+end
+
+group test_user do 
+  comments "primary group for #{test_user}"
+  only_if { node['hadoop_smoke_tests']['create_local_group'] == true }
 end
 
 # init test_user credentials 
+file "node[:bcpc][:hadoop][:kerberos][:keytab][:dir]/smoke_test.keytab" do
+  content Base64.decode(tester_keytab)
+  user test_user
+  group test_user
+  mode 0600
+end
 
+execute "init #{tester_princ} credentials" do
+  command "kinit -kt #{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]/smoke_test.keytab} #{tester_princ}"
+  user test_user
+end
 
 ruby_block "collect_properties_data" do
   block do
     chef_env = node.environment
-    krb_realm = node[:bcpc][:hadoop][:kerberos][:realm]
     resource_managers = node[:bcpc][:hadoop][:rm_hosts].map do |rms| float_host(rms.hostname) end
     zookeeper_quorum = node[:bcpc][:hadoop][:zookeeper][:servers].map do |zks| float_host(zks.hostname) end
     fs = "hdfs://#{chef_env}"
