@@ -22,7 +22,7 @@ require 'base64'
 
 krb_realm = node[:bcpc][:hadoop][:kerberos][:realm]
 test_user = node['hadoop_smoke_tests']['oozie_user']
-tester_princ = "test_user@#{krb_realm}"
+tester_princ = "#{test_user}@#{krb_realm}"
 tester_keytab = get_config('password', 'test_user_keytab', 'os')
 
 # Permissions test user to access HBase and get DTs
@@ -40,7 +40,6 @@ user test_user do
 end
 
 group test_user do 
-  comments "primary group for #{test_user}"
   only_if { node['hadoop_smoke_tests']['create_local_group'] == true }
 end
 
