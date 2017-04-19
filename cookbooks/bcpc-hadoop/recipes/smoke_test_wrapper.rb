@@ -51,7 +51,7 @@ file "#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/smoke_test.keytab" do
   mode 0600
 end
 
-execute "init #{tester_princ} credentials" do
+execute "kinit #{tester_princ} credentials" do
   command "kinit -kt #{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/smoke_test.keytab #{tester_princ}"
   user test_user
 end
