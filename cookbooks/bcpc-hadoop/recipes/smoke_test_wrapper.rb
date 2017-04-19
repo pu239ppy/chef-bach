@@ -44,7 +44,7 @@ group test_user do
 end
 
 # init test_user credentials 
-file "node[:bcpc][:hadoop][:kerberos][:keytab][:dir]/smoke_test.keytab" do
+file "#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/smoke_test.keytab" do
   content Base64.decode(tester_keytab)
   user test_user
   group test_user
@@ -52,7 +52,7 @@ file "node[:bcpc][:hadoop][:kerberos][:keytab][:dir]/smoke_test.keytab" do
 end
 
 execute "init #{tester_princ} credentials" do
-  command "kinit -kt #{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]/smoke_test.keytab} #{tester_princ}"
+  command "kinit -kt #{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/smoke_test.keytab #{tester_princ}"
   user test_user
 end
 
