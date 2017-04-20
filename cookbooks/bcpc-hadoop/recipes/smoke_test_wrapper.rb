@@ -43,11 +43,24 @@ group test_user do
   only_if { node['hadoop_smoke_tests']['create_local_group'] == true }
 end
 
+# create hdfs home
+execute 'hdfs home for smoke test executer' do
+  command "hdfs dfs -mkdir /user/#{test_user}"
+  user 'hdfs'
+  only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
+end
+
+execute 'chown home for smoke test executer' do
+  command "hdfs dfs -chown #{test_user} /user/#{test_user}"
+  user 'hdfs'
+  only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
+end
+
 # init test_user credentials 
 file "#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/smoke_test.keytab" do
   content Base64.decode(tester_keytab)
   user test_user
-  group test_user
+  group root
   mode 0600
 end
 
