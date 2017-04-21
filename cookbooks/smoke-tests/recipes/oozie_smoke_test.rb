@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+require 'date'
 
 test_user = node['hadoop_smoke_tests']['oozie_user']
 workflow_path = node['hadoop_smoke_tests']['wf_path']
@@ -39,6 +40,8 @@ template "#{Chef::Config['file_cache_path']}/oozie-smoke-test/coordinator.xml" d
   source 'coordinator.xml.erb'
   variables ( {
                 appname: app_name,
+                start_date: DateTime.now.strftime('%Y-%m-%dT%H:%MZ'),
+                end_date: DateTime.now.next_year(10).strftime('%Y-%m-%dT%H:%MZ'),
                 workflow: workflow_path,
                 frequency: '${coord:minutes(10)}'
               } )
@@ -77,20 +80,29 @@ execute "upload send_to_graphite.sh" do
   command "hdfs dfs -copyFromLocal -f #{Chef::Config['file_cache_path']}/oozie-smoke-test/send_to_graphite.sh #{workflow_path}"
   user test_user
   action :nothing
-  not_if "hdfs dfs -test -f #{workflow_path}/send_to_graphite.sh"
+  not_if "hdfs dfs -test -f #{workflow_path}/send_to_graphite.sh", :user => test_user
 end
 
 Chef::Resource::RubyBlock.send(:include, HadoopSmokeTests::OozieHelper)
+
+ruby_block 'smoke test coordinator status' do
+  block do
+    status_query = submit_command_running_host(
+      test_user, "jobs -jobtype coordinator")
+    node.run_state['need_coordinator_submit'] = 
+      if status_query == nil then
+        false
+      else
+        (status_query.each_line.select {
+         | line | (line.include? app_name) && 
+           (line.include? 'RUNNING') }).empty
+      end
+    end
+end
 
 ruby_block 'submit oozie smoke test' do
   block do
     submit_workflow_running_host(test_user, "#{Chef::Config['file_cache_path']}/oozie-smoke-test/smoke_test_coordinator.properties")
   end
-  not_if do 
-    status = submit_command_running_host(
-      test_user, "jobs -jobtype coordinator")
-    status.include? app_name and 
-      status.include? "RUNNING" or 
-      status == ""
-  end
+  only_if { node.run_state['need_coordinator_submit'] == true  } 
 end
