@@ -25,35 +25,14 @@ test_user = node['hadoop_smoke_tests']['oozie_user']
 tester_princ = "#{test_user}@#{krb_realm}"
 tester_keytab = get_config('password', 'test_user_keytab', 'os')
 
+include_recipe "bcpc-hadoop::smoke_test_user"
+
 # Permissions test user to access HBase and get DTs
 bash "HBASE permission for #{test_user}" do
   code <<-EOH
   echo "grant '#{test_user}', 'RWCAX'" | hbase shell
   EOH
   user 'hbase'
-end
-
-# create a local user and group if needed
-user test_user do
-  comment 'hadoop smoke test executer'
-  only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
-end
-
-group test_user do 
-  only_if { node['hadoop_smoke_tests']['create_local_group'] == true }
-end
-
-# create hdfs home
-execute 'hdfs home for smoke test executer' do
-  command "hdfs dfs -mkdir -p /user/#{test_user}"
-  user 'hdfs'
-  only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
-end
-
-execute 'chown home for smoke test executer' do
-  command "hdfs dfs -chown #{test_user} /user/#{test_user}"
-  user 'hdfs'
-  only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
 end
 
 # init test_user credentials 
