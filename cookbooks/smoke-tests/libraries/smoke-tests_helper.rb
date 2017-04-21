@@ -57,11 +57,11 @@ module HadoopSmokeTests
         else
           # raise exception?
           Chef::Log.error("Command submission result: #{cmd.stderr}")
-          ""
+          nil
         end
       else
         Chef::Log.error('Unable to find a live oozie server')
-        ""
+        nil
       end
     end
 
