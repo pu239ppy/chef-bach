@@ -45,7 +45,7 @@ end
 
 # create hdfs home
 execute 'hdfs home for smoke test executer' do
-  command "hdfs dfs -mkdir /user/#{test_user}"
+  command "hdfs dfs -mkdir -p /user/#{test_user}"
   user 'hdfs'
   only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
 end
