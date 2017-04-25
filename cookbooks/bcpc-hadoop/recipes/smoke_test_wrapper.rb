@@ -37,7 +37,7 @@ end
 
 # init test_user credentials 
 file "#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/smoke_test.keytab" do
-  content Base64.decode(tester_keytab)
+  content Base64.decode64(tester_keytab)
   user test_user
   group root
   mode 0600
