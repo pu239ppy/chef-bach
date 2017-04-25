@@ -52,7 +52,7 @@ end
 
 ruby_block 'read in keytab' do
   block do
-    node.run_state['test_user_base64_keytab'] = Base64.dencode64(File.open(node.run_state["test_user_keytab_file"],'rb').read)
+    node.run_state['test_user_base64_keytab'] = Base64.encode64(File.open(node.run_state["test_user_keytab_file"],'rb').read)
   end
   action :nothing
   notifies :create, 'chef_vault_secret[test_user_keytab]', :immediate
