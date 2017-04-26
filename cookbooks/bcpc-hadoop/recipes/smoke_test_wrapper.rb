@@ -39,7 +39,7 @@ end
 file "#{node[:bcpc][:hadoop][:kerberos][:keytab][:dir]}/smoke_test.keytab" do
   content Base64.decode64(tester_keytab)
   user test_user
-  group root
+  group 'root'
   mode 0600
 end
 
