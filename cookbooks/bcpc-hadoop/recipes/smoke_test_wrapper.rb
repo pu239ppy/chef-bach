@@ -23,7 +23,7 @@ require 'base64'
 krb_realm = node[:bcpc][:hadoop][:kerberos][:realm]
 test_user = node['hadoop_smoke_tests']['oozie_user']
 tester_princ = "#{test_user}@#{krb_realm}"
-tester_keytab = get_config('password', 'test_user_keytab', 'os')
+tester_keytab = get_config('keytab', 'test_user_keytab', 'os')
 
 include_recipe "bcpc-hadoop::smoke_test_user"
 
