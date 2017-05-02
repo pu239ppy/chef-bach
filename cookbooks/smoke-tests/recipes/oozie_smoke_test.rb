@@ -94,7 +94,7 @@ ruby_block 'smoke test coordinator status' do
       else
         (status_query.each_line.select {
          | line | (line.include? app_name) && 
-           (line.include? 'RUNNING') }).empty
+           (line.include? 'RUNNING') }).empty?
       end
     end
 end
