@@ -22,6 +22,7 @@ test_user = node['hadoop_smoke_tests']['oozie_user']
 
 # create a local user and group if needed
 user test_user do
+  manage_home true
   comment 'hadoop smoke test executer'
   only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
 end
