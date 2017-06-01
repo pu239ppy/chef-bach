@@ -1,8 +1,10 @@
+require 'cluster_data'
+
 keytab_dir = node[:bcpc][:hadoop][:kerberos][:keytab][:dir]
 realm = node[:bcpc][:hadoop][:kerberos][:realm]
 viphost = float_host(node[:bcpc][:management][:viphost])
 
-get_cluster_nodes().each do |h|
+BACH::ClusterDef.new.fetch_cluster_def().map { |hst| hst[:fqdn] }.each do |h|
   include_recipe 'bach_krb5::keytab_directory'
 
   # Generate all the principals
@@ -37,7 +39,7 @@ get_cluster_nodes().each do |h|
   end
 end
 
-get_cluster_nodes().each do |h|
+BACH::ClusterDef.new.fetch_cluster_def().map { |hst| hst[:fqdn] }.each do |h|
   host_fqdn = float_host(h)
 
   # Create a subdirectory for each host.

@@ -38,14 +38,18 @@
         "interface" : "eth0",
         "pxe_interface" : "eth1",
         "hostname" : "bcpc-bootstrap",
-        "server" : "10.0.101.3",
-        "dhcp_subnet" : "10.0.101.0",
-        "dhcp_range" : "10.0.101.14 10.0.101.250",
+        "server" : "10.0.100.3",
+        "cluster_def_path": "/cluster-def/",
+        "dhcp_subnet" : "10.0.100.0",
+        "dhcp_range" : "10.0.100.14 10.0.100.250",
         "preseed": {
           "additional_packages": [ "openssh-server",
                                    "lldpd",
                                    "virtualbox-guest-utils" ]
         }
+      },
+      "mysql": {
+        "bootstrap_on_error": true
       },
       "hadoop" : {
         "yarn" : {

@@ -26,10 +26,16 @@ require 'pry'
 require 'uri'
 require_relative 'lib/cluster_data'
 require_relative 'lib/chef_node'
+require 'cluster_def'
 
 class ClusterAssignRoles
   include BACH::ClusterData
   include BACH::ClusterData::ChefNode
+
+class ClusterAssignRoles
+  def initialize
+    @cd = BACH::ClusterData.new
+  end
 
   #
   # Takes no arguments.
@@ -38,12 +44,12 @@ class ClusterAssignRoles
   #
   def all_hadoop_head_nodes
     # All head nodes should have this specific role.
-    confirmed_head_nodes = parse_cluster_txt.select do |nn|
+    confirmed_head_nodes = @cd.fetch_cluster_def.select do |nn|
       nn[:runlist].include?('role[BCPC-Hadoop-Head]')
     end
 
     # Any nodes that have something matching "Head"
-    possible_head_nodes = parse_cluster_txt.select do |nn|
+    possible_head_nodes = @cd.fetch_cluster_def.select do |nn|
       nn[:runlist].include?('Head')
     end
 
@@ -65,7 +71,7 @@ class ClusterAssignRoles
 
   # If no runlist is provided, the runlist in cluster.txt will be used.
   # arguments:
-  #   nodes   -  a list of node objects (e.g. from parse_cluster_txt())
+  #   nodes   -  a list of node objects (e.g. from fetch_cluster_def())
   #   runlist -- a string for a Chef run_list
   # returns:
   #   nothing
@@ -259,7 +265,7 @@ class ClusterAssignRoles
 
   def install_kafka(target_nodes)
     # Zookeeper has to come up before Kafka.
-    all_zk_nodes = parse_cluster_txt(cluster_txt).select do |node|
+    all_zk_nodes = @cd.fetch_cluster_def.select do |node|
       node[:runlist].include?('role[BCPC-Kafka-Head-Zookeeper]')
     end
 
@@ -301,7 +307,7 @@ class ClusterAssignRoles
 
     bootstrap_url =
       'http://' +
-      chef_environment[:override_attributes][:bcpc][:bootstrap][:server] +
+      ridley.environment.find(chef_environment_name).override_attributes[:bcpc][:bootstrap][:server] +
       '/chef-install.sh'
 
     require 'pry'
@@ -450,17 +456,15 @@ class ClusterAssignRoles
     end
 
     target_nodes = if optional_thing.nil?
-                     parse_cluster_txt(cluster_txt)
+                     @cd.fetch_cluster_def
                    else
-                     node_matches = \
-                       parse_cluster_txt(cluster_txt).select do |entry|
+                     node_matches = @cd.fetch_cluster_def.select do |entry|
                        entry[:ip_address].include?(optional_thing) ||
                        entry[:fqdn].include?(optional_thing.downcase)
                      end
 
                      if node_matches.empty?
-                       node_matches = \
-                         parse_cluster_txt(cluster_txt).select do |entry|
+                       node_matches = @cd.fetch_cluster_def.select do |entry|
                          entry[:runlist]
                            .downcase
                            .include?(optional_thing.downcase)

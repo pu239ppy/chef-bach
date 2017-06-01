@@ -16,6 +16,7 @@ CHEF_SERVER=$1
 CHEF_ENVIRONMENT=$2
 
 # Assume we are running in the chef-bcpc directory
+# Are we running under Vagrant?  If so, jump through some extra hoops.
 sudo chef-client -E "$CHEF_ENVIRONMENT" -c .chef/knife.rb
 PEM_RELATIVE_PATH=.chef/$(hostname -f).pem
 sudo chown $(whoami):root $PEM_RELATIVE_PATH
