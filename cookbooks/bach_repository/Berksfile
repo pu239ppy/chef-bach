@@ -9,3 +9,5 @@ group :integration do
   cookbook 'bach_common', path: '../bach_common'
   cookbook 'bcpc', path: '../bcpc'
 end
+
+cookbook 'java'
