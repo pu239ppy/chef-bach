@@ -104,9 +104,13 @@ module BACH
 
     def validate_cluster_def(cluster_def, fields)
         # validate columns
-        if cluster_def.select { |row| row.length != fields.length } then
+        if (cluster_def.select{ |row| row.length != fields.length }).length > 0  then
           fail "Retreived cluster data appears to be invalid -- missing columns"
         end
+        # validate node ids 
+        if (cluster_def.select{ |row| row[:node_id] ! = '-' and row[:node_id].to_i = 0 }).length > 0  then
+          fail "Retreived cluster data appears to be invalid -- node IDs must be positive integers between 0 and 256 (1..255)"
+       end 
     end
 
     def parse_cluster_def(cluster_def)
@@ -135,6 +139,8 @@ module BACH
       end
     end
 
+    # we will probbaly need a function that combines a remote fetcer
+    # with local and returns whichever returns at all
     def fetch_cluster_def
       cluster_def_url = node[:bcpc][:bootstrap][:server] + node[:bcpc][:bootstrap][:cluster_def_path]
       response = Faraday.get cluster_def_url 
