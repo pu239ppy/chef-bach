@@ -102,22 +102,36 @@ module BACH
       %r{^08:00:27}.match(entry[:mac_address])
     end
 
-    def parse_cluster_def(cluster_def)
-      fields = [
-                :node_id,
-                :hostname,
-                :mac_address,
-                :ip_address,
-                :ilo_address,
-                :cobbler_profile,
-                :dns_domain,
-                :runlist
-               ]
+    def validate_cluster_def(cluster_def, fields)
+        # validate columns
+        if cluster_def.select { |row| row.length != fields.length } then
+          fail "Retreived cluster data appears to be invalid -- missing columns"
+        end
+    end
 
-      # This is really gross because Ruby 1.9 lacks Array#to_h.
-      cluster_def.map do |line|
-        entry = Hash[*fields.zip(line.split(' ')).flatten(1)]
-        entry.merge({fqdn: fqdn(entry)})
+    def parse_cluster_def(cluster_def)
+      # parse something that looks like cluster.txt and memorize the result
+      if node.run_state[:cluster_def] != nil then 
+        node.run_state[:cluster_def]
+      else
+        fields = [
+                  :node_id,
+                  :hostname,
+                  :mac_address,
+                  :ip_address,
+                  :ilo_address,
+                  :cobbler_profile,
+                  :dns_domain,
+                  :runlist
+                 ]
+
+          # This is really gross because Ruby 1.9 lacks Array#to_h.
+          node.run_state[:cluster_def] = cluster_def.map do |line|
+            entry = Hash[*fields.zip(line.split(' ')).flatten(1)]
+            entry.merge({fqdn: fqdn(entry)})
+          validate_cluster_def(node.run_state[:cluster_def], fields)
+          node.run_state[:cluster_def] 
+        end
       end
     end
 
