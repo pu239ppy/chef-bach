@@ -130,11 +130,12 @@ module BACH
                  ]
 
           # This is really gross because Ruby 1.9 lacks Array#to_h.
-          node.run_state[:cluster_def] = cluster_def.map do |line|
+          cdef = cluster_def.map do |line|
             entry = Hash[*fields.zip(line.split(' ')).flatten(1)]
             entry.merge({fqdn: fqdn(entry)})
-          validate_cluster_def(node.run_state[:cluster_def], fields)
-          node.run_state[:cluster_def] 
+          validate_cluster_def(cdef, fields)
+          node.run_state[:cluster_def] = cdef
+          node.run_state[:cluster_def]
         end
       end
     end
