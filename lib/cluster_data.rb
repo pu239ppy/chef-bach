@@ -102,15 +102,25 @@ module BACH
       %r{^08:00:27}.match(entry[:mac_address])
     end
 
+    def validate_node_number?(nn)
+      # node number must either be '-' or a positive integer 
+      # 1..255
+      if nn != '-' and nn < 1 and nn > 255 then
+        false
+      else
+        true
+      end 
+    end
+
     def validate_cluster_def(cluster_def, fields)
         # validate columns
         if (cluster_def.select{ |row| row.length != fields.length }).length > 0  then
           fail "Retreived cluster data appears to be invalid -- missing columns"
         end
         # validate node ids 
-        if (cluster_def.select{ |row| row[:node_id] ! = '-' and row[:node_id].to_i = 0 }).length > 0  then
+        if (cluster_def.select{ |row| validate_node_number?[:node_id] == false }).length > 0  then
           fail "Retreived cluster data appears to be invalid -- node IDs must be positive integers between 0 and 256 (1..255)"
-       end 
+        end 
     end
 
     def parse_cluster_def(cluster_def)
