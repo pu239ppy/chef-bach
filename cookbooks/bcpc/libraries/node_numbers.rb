@@ -15,8 +15,7 @@ module BCPC
 
     def bcpc_8bit_node_number(target_node = node)
       head_nodes = get_head_nodes
-      
-      my_8bit_value = head_nodes.select { |row| row[:host_name] == target_node[:hostname] }.first[:node_id]
+      my_8bit_value = head_nodes.select { |row| row[:host_name] == target_node[:hostname] }.first[:node_id].to_i % 255
       my_8bit_value
     end
   end
