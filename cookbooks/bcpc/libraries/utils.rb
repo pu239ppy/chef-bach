@@ -185,7 +185,7 @@ def get_head_nodes
   # Zookeeper nodes are the de facto heads for a Kafka cluster, since
   # they run Zabbix, Graphite, MySQL et al.
   #
-  Chef::Search::Query.new.search(:node, 'role:BCPC-Hadoop-Head OR role:BCPC-Kafka-Head-Zookeeper').first
+  fetch_cluster_def
 end
 
 def get_head_node_names

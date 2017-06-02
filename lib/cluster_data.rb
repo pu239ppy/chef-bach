@@ -13,6 +13,7 @@ require 'json'
 require 'ohai'
 require 'pry'
 require 'ridley'
+require 'faraday'
 Ridley::Logging.logger.level = Logger.const_get 'ERROR'
 
 module BACH
@@ -101,13 +102,9 @@ module BACH
       %r{^08:00:27}.match(entry[:mac_address])
     end
 
-    def fetch_cluster_def(url)
-    end 
-      
-
     def parse_cluster_def(cluster_def)
       fields = [
-                :node_id
+                :node_id,
                 :hostname,
                 :mac_address,
                 :ip_address,
@@ -124,6 +121,16 @@ module BACH
       end
     end
 
+    def fetch_cluster_def
+      cluster_def_url = node[:bcpc][:bootstrap][:server] + node[:bcpc][:bootstrap][:cluster_def_path]
+      response = Faraday.get cluster_def_url 
+      if response.success? then
+        parse_cluster_def(response.body)
+      else
+        nil
+      end
+    end 
+      
     def parse_cluster_txt
       parse_cluster_def(File.readlines(File.join(repo_dir, 'cluster.txt')))
     end
