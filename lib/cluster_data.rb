@@ -150,9 +150,12 @@ module BACH
       end
     end
 
-    # we will probbaly need a function that combines a remote fetcer
-    # with local and returns whichever returns at all
+    # combines local cluster.txt access with http call to cluster data
     def fetch_cluster_def
+        fetch_cluster_def_http || fetch_cluster_def_local 
+
+    # fetch cluster definition via http
+    def fetch_cluster_def_http
       cluster_def_url = node[:bcpc][:bootstrap][:server] + node[:bcpc][:bootstrap][:cluster_def_path]
       response = Faraday.get cluster_def_url 
       if response.success? then
@@ -162,7 +165,8 @@ module BACH
       end
     end 
       
-    def parse_cluster_txt
+    # locally access cluster.txt
+    def fetch_cluster_def_local
       parse_cluster_def(File.readlines(File.join(repo_dir, 'cluster.txt')))
     end
 
