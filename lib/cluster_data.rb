@@ -153,6 +153,7 @@ module BACH
     # combines local cluster.txt access with http call to cluster data
     def fetch_cluster_def
         fetch_cluster_def_http || fetch_cluster_def_local 
+    end
 
     # fetch cluster definition via http
     def fetch_cluster_def_http
