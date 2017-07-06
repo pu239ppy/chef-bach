@@ -21,7 +21,7 @@ require 'openssl'
 require 'base64'
 require 'thread'
 require 'ipaddr'
-require 'cluster_data'
+require_relative 'cluster_data'
 
 # create databag if missing
 def create_databag(name)
