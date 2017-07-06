@@ -82,7 +82,6 @@ def make_config!(key, value)
 end
 
 def get_hadoop_heads
-  #results = Chef::Search::Query.new.search(:node, "role:BCPC-Hadoop-Head AND chef_environment:#{node.chef_environment}").first
   results = BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }
   if results.any?{|x| x['hostname'] == node[:hostname]}
     results.map!{|x| x['hostname'] == node[:hostname] ? node : x}
@@ -93,7 +92,6 @@ def get_hadoop_heads
 end
 
 def get_quorum_hosts
-  #results = Chef::Search::Query.new.search(:node, "(roles:BCPC-Hadoop-Quorumnode or role:BCPC-Hadoop-Head) AND chef_environment:#{node.chef_environment}").first
   results = BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Quorumnode]" or hst[:runlist].include? "role[BCPC-Hadoop-Head]" }
   if results.any?{|x| x['hostname'] == node[:hostname]}
     results.map!{|x| x['hostname'] == node[:hostname] ? node : x}
@@ -104,7 +102,6 @@ def get_quorum_hosts
 end
 
 def get_hadoop_workers
-  #results = Chef::Search::Query.new.search(:node, "role:BCPC-Hadoop-Worker AND chef_environment:#{node.chef_environment}").first
   results = BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }
   if results.any?{|x| x['hostname'] == node[:hostname]}
     results.map!{|x| x['hostname'] == node[:hostname] ? node : x}
@@ -118,9 +115,6 @@ def get_namenodes()
   # Logic to get all namenodes if running in HA
   # or to get only the master namenode if not running in HA
   if node['bcpc']['hadoop']['hdfs']['HA']
-    #nnrole = Chef::Search::Query.new.search(:node, "role:BCPC-Hadoop-Head-Namenode* AND chef_environment:#{node.chef_environment}").first
-    #nnroles = Chef::Search::Query.new.search(:node, "roles:BCPC-Hadoop-Head-Namenode* AND chef_environment:#{node.chef_environment}").first
-    #nn_hosts = nnrole.concat nnroles
     nn_hosts = BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-Namenode]" or hst[:runlist].include? "role[BCPC-Hadoop-Head-Namenode-Standby]" }
   else
     #nn_hosts = get_nodes_for("namenode_no_HA")
