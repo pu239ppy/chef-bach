@@ -7,6 +7,10 @@
 # will attempt to contact the chef server.  These should probably be
 # separated from each other.
 #
+
+bcpc_chef_gem 'faraday' do
+  compile_time true
+end
 require 'faraday'
 
 module BACH
