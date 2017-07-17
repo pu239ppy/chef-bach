@@ -31,6 +31,8 @@ apt-get -o Dir::Etc::SourceList=/etc/apt/sources.list.d/bcpc.list \
 	update
 
 apt-get -y install chef=12.19.36-1
+# Faraday will be required in libs, so we will not have a chance to recipe this away
+/opt/chef/embedded/bin/gem install faraday
 
 if dpkg -s chef-server 2>/dev/null | grep -q ^Status.*installed && \
    dpkg -s chef 2>/dev/null | grep -q ^Version.*12; then
