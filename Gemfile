@@ -13,6 +13,7 @@ elsif File.exist?('/opt/chef/Gemfile')
     instance_eval(opscode_gem_data, "/opt/chef/Gemfile")
 else
   source 'https://rubygems.org' do
+    gem 'faraday'
     gem 'parallel'
     gem 'chef-vault'
     gem 'ipaddress'
