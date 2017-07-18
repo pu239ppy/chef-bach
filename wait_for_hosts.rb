@@ -6,7 +6,7 @@ require 'pp'
 require 'pry'
 require 'socket'
 
-require_relative 'lib/cluster_data'
+require_relative 'cookboks/bcpc/lib/cluster_data'
 include BACH::ClusterData
 
 def raw_apache_log
@@ -97,7 +97,7 @@ end
 #   - a list of reachable hosts
 #
 def listening_hosts(target_hosts=installed_hosts)
-  host_entries = parse_cluster_txt.select do |entry|
+  host_entries = fetch_cluster_def.select do |entry|
     target_hosts.include?(entry[:hostname]) ||
     target_hosts.include?(entry[:fqdn])
   end
