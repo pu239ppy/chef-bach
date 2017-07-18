@@ -52,34 +52,34 @@ module BACH
 
     def parse_cluster_def(cluster_def)
       # parse something that looks like cluster.txt and memorize the result
-      if node.run_state[:cluster_def] != nil then 
-        node.run_state[:cluster_def]
-      else
-        fields = [
-                  :node_id,
-                  :hostname,
-                  :mac_address,
-                  :ip_address,
-                  :ilo_address,
-                  :cobbler_profile,
-                  :dns_domain,
-                  :runlist
-                 ]
+      fields = [
+                :node_id,
+                :hostname,
+                :mac_address,
+                :ip_address,
+                :ilo_address,
+                :cobbler_profile,
+                :dns_domain,
+                :runlist
+               ]
 
-          # This is really gross because Ruby 1.9 lacks Array#to_h.
-          cdef = cluster_def.map do |line|
-            entry = Hash[*fields.zip(line.split(' ')).flatten(1)]
-            entry.merge({fqdn: fqdn(entry)})
-          validate_cluster_def(cdef, fields)
-          node.run_state[:cluster_def] = cdef
-          node.run_state[:cluster_def]
+        # This is really gross because Ruby 1.9 lacks Array#to_h.
+        cdef = cluster_def.map do |line|
+          entry = Hash[*fields.zip(line.split(' ')).flatten(1)]
+          entry.merge({fqdn: fqdn(entry)})
+        validate_cluster_def(cdef, fields)
+        cdef
         end
       end
     end
 
     # combines local cluster.txt access with http call to cluster data
     def fetch_cluster_def
-        fetch_cluster_def_http || fetch_cluster_def_local 
+        begin
+          fetch_cluster_def_http
+        rescue
+          fetch_cluster_def_local 
+        end
     end
 
     # fetch cluster definition via http
