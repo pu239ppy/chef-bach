@@ -70,8 +70,6 @@ module BACH
         end
         validate_cluster_def(cdef, fields)
         cdef
-        end
-      end
     end
 
     # combines local cluster.txt access with http call to cluster data
