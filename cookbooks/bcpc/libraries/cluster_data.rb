@@ -67,6 +67,7 @@ module BACH
         cdef = cluster_def.map do |line|
           entry = Hash[*fields.zip(line.split(' ')).flatten(1)]
           entry.merge({fqdn: fqdn(entry)})
+        end
         validate_cluster_def(cdef, fields)
         cdef
         end
