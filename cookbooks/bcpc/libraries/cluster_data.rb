@@ -81,17 +81,19 @@ module BACH
     def fetch_cluster_def
         begin
           fetch_cluster_def_http
-        rescue
+        rescue Exception => http_e
+          puts http_e 
+          puts http_e.btacktrace
           fetch_cluster_def_local 
         end
     end
 
     # fetch cluster definition via http
     def fetch_cluster_def_http
-      cluster_def_url = node[:bcpc][:bootstrap][:server] + node[:bcpc][:bootstrap][:cluster_def_path]
+      cluster_def_url = "http://#{node[:bcpc][:bootstrap][:server]}#{node[:bcpc][:bootstrap][:cluster_def_path]}"
       response = Faraday.get cluster_def_url 
       if response.success? then
-        parse_cluster_def(response.body)
+        parse_cluster_def(response.body.split("\n"))
       else
         nil
       end
