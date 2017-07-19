@@ -6,7 +6,7 @@ require 'pp'
 require 'pry'
 require 'socket'
 
-require_relative 'cookboks/bcpc/lib/cluster_data'
+require_relative 'cookboks/bcpc/libraries/cluster_data'
 include BACH::ClusterData
 
 def raw_apache_log
