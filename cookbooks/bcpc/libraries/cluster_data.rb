@@ -40,8 +40,9 @@ module BACH
     end
 
     def validate_cluster_def(cluster_def, fields)
-        # validate columns
-        if (cluster_def.select{ |row| row.length != fields.length }).length > 0  then
+        cdef_copy = cluster_def.filter{ |row| row[:runlist] != 'SKIP' }
+        # validate columns each row has the same number of fields as fields
+        if (cdef_copy.select{ |row| row.length != fields.length }).length > 0  then
           fail "Retreived cluster data appears to be invalid -- missing columns"
         end
         # validate node ids 
