@@ -32,7 +32,7 @@ module BACH
     def validate_node_number?(nn)
       # node number must either be '-' or a positive integer 
       # 1..255
-      if nn != '-' and nn < 1 and nn > 255 then
+      if nn != '-' and nn.to_i < 1 and nn.to_i > 255 then
         false
       else
         true
@@ -48,7 +48,7 @@ module BACH
           fail "Retreived cluster data appears to be invalid -- missing columns"
         end
         # validate node ids 
-        if (cluster_def.select{ |row| validate_node_number?[:node_id] == false }).length > 0  then
+        if (cluster_def.select{ |row| validate_node_number?(row[:node_id]) == false }).length > 0  then
           fail "Retreived cluster data appears to be invalid -- node IDs must be positive integers between 0 and 256 (1..255)"
         end 
     end
