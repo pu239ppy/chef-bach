@@ -22,6 +22,7 @@ require 'base64'
 require 'thread'
 require 'ipaddr'
 require_relative 'cluster_data'
+include BACH::ClusterData
 
 # create databag if missing
 def create_databag(name)
