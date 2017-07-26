@@ -78,10 +78,10 @@ end
 
 template "#{cache_dir}/send_to_graphite.sh" do
   source "send_to_graphite_sh.erb"
-  variables (
+  variables ({
     carbon_receiver: node['hadoop_smoke_tests']['carbon-line-receiver'],
     carbon_port: node['hadoop_smoke_tests']['carbon-line-port']
-  )
+  })
 end
 
 execute "upload send_to_graphite.sh" do
