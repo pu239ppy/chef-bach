@@ -34,18 +34,20 @@ end
 
 template "#{cache_dir}/smoke_test_coordinator.properties" do
   source 'smoke_test_job_properties.erb'
-  variables({ smoke: node['hadoop_smoke_tests']['wf'] })
+  variables(smoke: node['hadoop_smoke_tests']['wf'])
 end
 
 template "#{cache_dir}/coordinator.xml" do
   source 'coordinator.xml.erb'
-  variables({
-             appname: app_name,
-             start_date: DateTime.now.strftime('%Y-%m-%dT%H:%MZ'),
-             end_date: DateTime.now.next_year(10).strftime('%Y-%m-%dT%H:%MZ'),
-             workflow: workflow_path,
-             frequency: '${coord:minutes(10)}'
-             })
+  variables(
+    # rubocop:disable Layout/IndentHash
+    appname: app_name,
+    start_date: DateTime.now.strftime('%Y-%m-%dT%H:%MZ'),
+    end_date: DateTime.now.next_year(10).strftime('%Y-%m-%dT%H:%MZ'),
+    workflow: workflow_path,
+    frequency: '${coord:minutes(10)}'
+  )
+  # rubocop:enable Layout/IndentHash
 end
 
 execute "create HDFS coordinator path #{coordinator_path}" do
@@ -59,29 +61,35 @@ execute "create HDFS workflow path #{workflow_path}" do
 end
 
 execute "upload coordinator to #{coordinator_path}" do
-  command "hdfs dfs -copyFromLocal -f #{cache_dir}/coordinator.xml #{coordinator_path}"
+  command "hdfs dfs -copyFromLocal -f \
+  #{cache_dir}/coordinator.xml #{coordinator_path}"
   user test_user
-  not_if "hdfs dfs -test -f #{coordinator_path}/coordinator.xml", :user => test_user
+  not_if "hdfs dfs -test -f #{coordinator_path}/coordinator.xml",
+         :user => test_user
 end
 
 execute "upload workflow to #{workflow_path}" do
-  command "hdfs dfs -copyFromLocal -f #{cache_dir}/workflow.xml #{workflow_path}" 
+  command "hdfs dfs -copyFromLocal -f #{cache_dir}/workflow.xml \
+  #{workflow_path}" 
   user test_user
-  not_if "hdfs dfs -test -f #{workflow_path}/workflow.xml", :user => test_user
+  not_if "hdfs dfs -test -f #{workflow_path}/workflow.xml",
+         :user => test_user
 end
 
 template "#{cache_dir}/send_to_graphite.sh" do
   source "send_to_graphite_sh.erb"
-  variables ({
+  variables (
     carbon_receiver: node['hadoop_smoke_tests']['carbon-line-receiver'],
     carbon_port: node['hadoop_smoke_tests']['carbon-line-port']
-             })
+  )
 end
 
 execute "upload send_to_graphite.sh" do
-  command "hdfs dfs -copyFromLocal -f #{cache_dir}/send_to_graphite.sh #{workflow_path}"
+  command "hdfs dfs -copyFromLocal -f #{cache_dir}/send_to_graphite.sh \
+  #{workflow_path}"
   user test_user
-  not_if "hdfs dfs -test -f #{workflow_path}/send_to_graphite.sh", :user => test_user
+  not_if "hdfs dfs -test -f #{workflow_path}/send_to_graphite.sh",
+    :user => test_user
 end
 
 Chef::Resource::RubyBlock.send(:include, HadoopSmokeTests::OozieHelper)
@@ -105,7 +113,7 @@ ruby_block 'submit oozie smoke test' do
   block do
     submit_workflow_running_host(
       test_user,
-      "#{chache_dir}/smoke_test_coordinator.properties")
+      "#{cache_dir}/smoke_test_coordinator.properties")
   end
   only_if { node.run_state['need_coordinator_submit'] == true }
 end

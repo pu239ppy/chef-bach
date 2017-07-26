@@ -24,23 +24,23 @@ test_user = node['hadoop_smoke_tests']['oozie_user']
 user test_user do
   manage_home true
   comment 'hadoop smoke test executer'
-  only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
+  only_if {node['hadoop_smoke_tests']['create_local_user'] == true}
 end
 
 group test_user do 
-  only_if { node['hadoop_smoke_tests']['create_local_group'] == true }
+  only_if {node['hadoop_smoke_tests']['create_local_group'] == true}
 end
 
 # create hdfs home
 execute 'hdfs home for smoke test executer' do
   command "hdfs dfs -mkdir -p /user/#{test_user}"
   user 'hdfs'
-  only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
+  only_if {node['hadoop_smoke_tests']['create_local_user'] == true}
 end
 
 execute 'chown home for smoke test executer' do
   command "hdfs dfs -chown #{test_user} /user/#{test_user}"
   user 'hdfs'
-  only_if { node['hadoop_smoke_tests']['create_local_user'] == true }
+  only_if {node['hadoop_smoke_tests']['create_local_user'] == true}
 end
 
