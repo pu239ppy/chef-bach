@@ -46,7 +46,7 @@ end
 
 execute "dump keytab for #{test_user}" do
   command lazy {
-    "kadmin.local -q \"ktadd -k #{ node.run_state['test_user_keytab_file'] } -norandkey #{test_user}\""}
+    "kadmin.local -q \"ktadd -k #{node.run_state['test_user_keytab_file']} -norandkey #{test_user}\""}
   action :nothing
   notifies :run, 'ruby_block[read in keytab]', :immediate
 end
