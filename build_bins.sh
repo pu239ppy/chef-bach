@@ -80,7 +80,7 @@ EOF
 
 # Poise is needed early on in build-bins.rb as we depend on 
 # bcpc and bcpc brings in some resurces that use it
-/opt/chef/embedded/bin/gem install poise
+/opt/chefdk/embedded/bin/gem install poise
 
 #
 # We change to the vendor directory so that chef local-mode finds
