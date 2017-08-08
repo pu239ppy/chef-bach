@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: bcpc
-# Recipe:: chef_gems
+# Recipe:: chef_cluster_data_install
 #
 # Copyright 2017, Bloomberg Finance L.P.
 #
@@ -17,16 +17,6 @@
 # limitations under the License.
 #
 
-#
-# This recipe configures the chef gems required to begin a chef-bach
-# run on a node.  It solves the chicken/egg problem of being unable to
-# load the full cookbook set until after installing chef gems.
-#
-# This recipe is typically run during the "install_stubs" phase of
-# cluster_assign_roles.
-#
-include_recipe 'bcpc::chef_poise_install'
-include_recipe 'bcpc::chef_vault_install'
-include_recipe 'bcpc::chef_faraday_install'
-include_recipe 'bcpc::chef_ridley_install'
-include_recipe 'bcpc::chef_cluster_data_install'
+bcpc_chef_gem 'cluster_data' do
+  compile_time true
+end
