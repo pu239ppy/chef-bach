@@ -24,7 +24,7 @@ require 'net/ssh'
 require 'parallel'
 require 'pry'
 require 'uri'
-require_relative 'lib/cluster_data'
+require 'cluster_data'
 
 class ClusterAssignRoles
   include BACH::ClusterData

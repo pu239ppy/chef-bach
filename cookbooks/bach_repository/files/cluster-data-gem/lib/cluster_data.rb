@@ -225,7 +225,7 @@ module BACH
           fetch_cluster_def_http
         rescue Exception => http_e
           puts http_e 
-          puts http_e.btacktrace
+          puts http_e.backtrace
           fetch_cluster_def_local 
         end
     end
