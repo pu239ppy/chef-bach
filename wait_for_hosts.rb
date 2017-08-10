@@ -5,8 +5,7 @@ require 'mixlib/shellout'
 require 'pp'
 require 'pry'
 require 'socket'
-
-require_relative 'lib/cluster_data'
+require 'cluster_data'
 include BACH::ClusterData
 
 def raw_apache_log

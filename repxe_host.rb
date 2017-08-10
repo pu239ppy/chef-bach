@@ -54,7 +54,7 @@ require 'pry'
 require 'timeout'
 require 'optparse'
 
-require_relative 'lib/cluster_data'
+require 'cluster_data'
 include BACH::ClusterData
 
 def cluster_assign_roles(environment, type, entry=nil)
