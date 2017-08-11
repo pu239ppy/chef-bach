@@ -31,6 +31,7 @@ else
 end
 
 gem 'fpm'
+gem 'cluster_data', :path => '/home/vagrant/chef-bcpc/bins', :require => false
 
 source 'https://rubygems.org' do
   gem 'faker'
