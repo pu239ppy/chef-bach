@@ -17,8 +17,8 @@ CHEF_ENVIRONMENT=$2
 
 # Assume we are running in the chef-bcpc directory
 pushd lib/cluster-data-gem
-/opt/chef/embedded/bin/gem build cluster_data-0.1.0.gem
-sudo /opt/chef/embedded/bin/gem install -i . cluster_data
+/opt/chefdk/embedded/bin/gem build cluster_data-0.1.0.gem
+sudo /opt/chefdk/embedded/bin/gem install -i . cluster_data
 popd
 
 # Are we running under Vagrant?  If so, jump through some extra hoops.
