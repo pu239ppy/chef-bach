@@ -9,5 +9,5 @@ Gem::Specification.new do |s|
   s.files       = ["lib/cluster_data.rb"]
   s.homepage    =
       'http://github.com/bloomberg/chef-bach'
-  s.license       = 'Apache License 2.0'
+  s.license       = 'Apache-2.0'
 end
