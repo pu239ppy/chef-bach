@@ -17,7 +17,7 @@ CHEF_ENVIRONMENT=$2
 
 # Assume we are running in the chef-bcpc directory
 pushd lib/cluster-data-gem
-/opt/chefdk/embedded/bin/gem build cluster_data-0.1.0.gem
+/opt/chefdk/embedded/bin/gem build cluster_data.gemspec 
 sudo /opt/chefdk/embedded/bin/gem install -i . cluster_data
 popd
 
