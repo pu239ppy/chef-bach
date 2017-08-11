@@ -10,6 +10,7 @@ ENV['https_proxy'] ||= Chef::Config.https_proxy
 include_recipe 'bach_repository::tools'
 
 # Gems recipe has to run early because it includes fpm and related gems.
+include_recipe 'bach_repository::build_cluster_data_gem'
 include_recipe 'bach_repository::gems'
 
 include_recipe 'bach_repository::chef'
