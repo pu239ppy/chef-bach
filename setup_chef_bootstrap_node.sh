@@ -16,11 +16,6 @@ CHEF_SERVER=$1
 CHEF_ENVIRONMENT=$2
 
 # Assume we are running in the chef-bcpc directory
-pushd lib/cluster-data-gem
-/opt/chefdk/embedded/bin/gem build cluster_data.gemspec 
-sudo /opt/chefdk/embedded/bin/gem install -i . cluster_data
-popd
-
 # Are we running under Vagrant?  If so, jump through some extra hoops.
 sudo chef-client -E "$CHEF_ENVIRONMENT" -c .chef/knife.rb
 sudo chown $(whoami):root .chef/$(hostname -f).pem
