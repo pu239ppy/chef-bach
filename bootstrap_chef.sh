@@ -88,11 +88,6 @@ $SSH_CMD "cd $BCPC_DIR && sudo ./build_bins.sh"
 # https://github.com/bloomberg/chef-bach/issues/848
 echo "HACK - removing stacktrace file, since the build_bins run succeeded."
 
-
-$SSH_CMD "cd lib/cluster-data-gem && /opt/chefdk/embedded/bin/gem build cluster_data.gemspec"
-$SSH_CMD "cd lib/cluster-data-gem && sudo /opt/chefdk/embedded/bin/gem install -i . cluster_data"
-
-
 $SSH_CMD "sudo rm -f /var/chef/cache/chef-stacktrace.out"
 echo "Setting up chef server"
 $SSH_CMD "cd $BCPC_DIR && sudo ./setup_chef_server.sh ${CHEF_ENVIRONMENT}"
