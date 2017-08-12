@@ -49,7 +49,7 @@ popd > /dev/null
 
 pushd lib/cluster-data-gem  > /dev/null
 /opt/chefdk/embedded/bin/gem build cluster_data.gemspec
-sudo /opt/chefdk/embedded/bin/gem install -i cluster_data
+sudo /opt/chefdk/embedded/bin/gem install cluster_data
 popd > /dev/null
 
 if pgrep 'chef-client' > /dev/null; then
