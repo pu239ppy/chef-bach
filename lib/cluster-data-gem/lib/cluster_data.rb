@@ -14,6 +14,8 @@ require 'chef'
 # as well
 begin
   require 'chef-vault'
+  require 'ridley'
+  Ridley::Logging.logger.level = Logger.const_get 'ERROR'
 rescue LoadError
   puts 'chef-vault has not yet been installed'
 end
@@ -21,9 +23,7 @@ end
 require 'json'
 require 'ohai'
 require 'pry'
-require 'ridley'
 require 'faraday'
-Ridley::Logging.logger.level = Logger.const_get 'ERROR'
 
 module BACH
   module ClusterData
