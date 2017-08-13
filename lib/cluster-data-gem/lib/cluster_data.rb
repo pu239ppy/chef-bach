@@ -8,7 +8,16 @@
 # separated from each other.
 #
 require 'chef'
-require 'chef-vault'
+
+# TODO: Figure out a better way of handlig this
+# Perhaps manually force the install of chef-vault
+# as well
+begin
+  require 'chef-vault'
+rescue LoadError
+  puts 'chef-vault has not yet been installed'
+end
+
 require 'json'
 require 'ohai'
 require 'pry'
