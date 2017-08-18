@@ -31,7 +31,7 @@ else
 end
 
 gem 'fpm'
-gem 'cluster_data', :path => '/home/vagrant/chef-bcpc/lib/cluster-data-gem', :require => false
+gem 'cluster_data', :path => 'lib/cluster-data-gem/lib'
 
 source 'https://rubygems.org' do
   gem 'faker'
