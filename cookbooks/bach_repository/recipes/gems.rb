@@ -70,6 +70,12 @@ link "#{bins_dir}/gems" do
   to "#{gems_dir}"
 end
 
+# HACK to install cluster_data if it exists
+# since bundler will not do it for us
+execute 'copy cluster_data gem' do
+  command "cp #{repo_dir}/lib/cluster-data-gem/cluster_data-*.gem #{bins_dir}/gems"
+end
+
 execute 'gem-generate-index' do
   command "#{gem_binary} generate_index"
   cwd bins_dir
