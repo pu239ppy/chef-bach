@@ -1,6 +1,9 @@
 require 'base64'
+require 'cluster_data'
+include BACH::ClusterData
+
 # Upload keytabs to chef-server
-get_cluster_nodes().each do |h|
+fetch_cluster_def().map { hst| hst[:hostname] }.each do |h|
   node[:bcpc][:hadoop][:kerberos][:data].each do |srvc, srvdat|
     # Set host based on configuration
     config_host=srvdat['princhost'] == "_HOST" ? float_host(h.split('.')[0]) : srvdat['princhost'].split('.')[0]
