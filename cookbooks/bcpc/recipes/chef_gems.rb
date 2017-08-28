@@ -28,5 +28,4 @@
 include_recipe 'bcpc::chef_poise_install'
 include_recipe 'bcpc::chef_vault_install'
 include_recipe 'bcpc::chef_faraday_install'
-include_recipe 'bcpc::chef_ridley_install'
 include_recipe 'bcpc::chef_cluster_data_install'
