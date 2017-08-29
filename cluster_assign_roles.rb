@@ -27,7 +27,6 @@ require 'uri'
 require 'cluster_data'
 
 class ClusterAssignRoles
-  include BACH::ClusterData
 
   #
   # Takes no arguments.
@@ -36,12 +35,12 @@ class ClusterAssignRoles
   #
   def all_hadoop_head_nodes
     # All head nodes should have this specific role.
-    confirmed_head_nodes = fetch_cluster_def.select do |nn|
+      confirmed_head_nodes = BACH::ClusterData.new.fetch_cluster_def.select do |nn|
       nn[:runlist].include?('role[BCPC-Hadoop-Head]')
     end
 
     # Any nodes that have something matching "Head"
-    possible_head_nodes = fetch_cluster_def.select do |nn|
+      possible_head_nodes = BACH::ClusterData.new.fetch_cluster_def.select do |nn|
       nn[:runlist].include?('Head')
     end
 
@@ -249,7 +248,7 @@ class ClusterAssignRoles
 
   def install_kafka(target_nodes)
     # Zookeeper has to come up before Kafka.
-    all_zk_nodes = fetch_cluster_def.select do |node|
+      all_zk_nodes = BACH::ClusterData.new.fetch_cluster_def.select do |node|
       node[:runlist].include?('role[BCPC-Kafka-Head-Zookeeper]')
     end
 
@@ -440,15 +439,15 @@ class ClusterAssignRoles
     end
 
     target_nodes = if optional_thing.nil?
-                     fetch_cluster_def
+                       BACH::ClusterData.new.fetch_cluster_def
                    else
-                     node_matches = fetch_cluster_def.select do |entry|
+                       node_matches = BACH::ClusterData.new.fetch_cluster_def.select do |entry|
                        entry[:ip_address].include?(optional_thing) ||
                        entry[:fqdn].include?(optional_thing.downcase)
                      end
 
                      if node_matches.empty?
-                       node_matches = fetch_cluster_def.select do |entry|
+                         node_matches = BACH::ClusterData.new.fetch_cluster_def.select do |entry|
                          entry[:runlist]
                            .downcase
                            .include?(optional_thing.downcase)

@@ -26,7 +26,7 @@ require 'pry'
 require 'faraday'
 
 module BACH
-  module ClusterData
+  class ClusterData
     def chef_environment
       ridley.environment.find(chef_environment_name)
     end
