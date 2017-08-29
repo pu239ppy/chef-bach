@@ -4,6 +4,7 @@
 #
 include_recipe 'bach_repository::directory'
 include_recipe 'bach_repository::tools'
+repo_dir =  node[:bach][:repository][:repo_directory]
 bins_dir = node['bach']['repository']['bins_directory']
 gems_dir = node['bach']['repository']['gems_directory']
 gem_binary = node['bach']['repository']['gem_bin']
