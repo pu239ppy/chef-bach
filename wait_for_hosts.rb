@@ -6,7 +6,6 @@ require 'pp'
 require 'pry'
 require 'socket'
 require 'cluster_data'
-include BACH::ClusterData
 
 def raw_apache_log
   cc = Mixlib::ShellOut.new('sudo cat /var/log/apache2/access.log')
@@ -96,7 +95,7 @@ end
 #   - a list of reachable hosts
 #
 def listening_hosts(target_hosts=installed_hosts)
-  host_entries = fetch_cluster_def.select do |entry|
+  host_entries = BACH::ClusterData.new.fetch_cluster_def.select do |entry|
     target_hosts.include?(entry[:hostname]) ||
     target_hosts.include?(entry[:fqdn])
   end
