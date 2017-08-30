@@ -232,15 +232,7 @@ module BACH
 
     # combines local cluster.txt access with http call to cluster data
     def fetch_cluster_def
-      # Do we have a node object and is there already a cluster_def
-      # TODO: Make this a singleton, and stash in node object if invoked
-      # in chef_run
-      if node_obj != nil then
-        if node_obj['run_state']['cluster_def'] != nil then
-           node_obj['run_state']['cluster_def'] 
-        end
-      elsif @cluster_def != nil then
-        # In scripts we might be a long lived object
+      if @cluster_def != nil then
         @cluster_def
       end
 
@@ -252,13 +244,7 @@ module BACH
         @cluster_def = fetch_cluster_def_local 
       end
 
-      # if we have a node object memoize for next time we ask
-      if node_obj != nil then
-        node_obj['run_state']['cluster_def'] = @cluster_def
-        node_obj['run_state']['cluster_def']
-      else
-        @cluster_def
-      end
+      @cluster_def
     end
 
     # fetch cluster definition via http
