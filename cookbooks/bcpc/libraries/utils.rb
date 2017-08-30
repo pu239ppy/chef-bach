@@ -186,7 +186,7 @@ def get_head_nodes
   # Zookeeper nodes are the de facto heads for a Kafka cluster, since
   # they run Zabbix, Graphite, MySQL et al.
   #
-    BACH::ClusterData.new.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" or hst[:runlist].include? "role[BCPC-Kafka-Head-Zookeeper]" }
+    BACH::ClusterData.new(node).fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" or hst[:runlist].include? "role[BCPC-Kafka-Head-Zookeeper]" }
 end
 
 def get_head_node_names

@@ -9,9 +9,7 @@
 #
 require 'chef'
 
-# TODO: Figure out a better way of handlig this
-# Perhaps manually force the install of chef-vault
-# as well
+# TODO: Ia there a better way of handling this? Rodley has a lot of requirements
 begin
   require 'chef-vault'
   require 'ridley'
@@ -19,7 +17,6 @@ begin
 rescue LoadError
   puts 'chef-vault has not yet been installed'
 end
-
 require 'json'
 require 'ohai'
 require 'pry'
@@ -27,6 +24,11 @@ require 'faraday'
 
 module BACH
   class ClusterData
+    def initialize(node_obj=nil)
+      @node_obj = node_obj
+      @cluster_def = nil
+    end
+
     def chef_environment
       ridley.environment.find(chef_environment_name)
     end
@@ -230,18 +232,38 @@ module BACH
 
     # combines local cluster.txt access with http call to cluster data
     def fetch_cluster_def
-        begin
-          fetch_cluster_def_http
-        rescue Exception => http_e
-          puts http_e 
-          puts http_e.backtrace
-          fetch_cluster_def_local 
+      # Do we have a node object and is there already a cluster_def
+      # TODO: Make this a singleton, and stash in node object if invoked
+      # in chef_run
+      if node_obj != nil then
+        if node_obj['run_state']['cluster_def'] != nil then
+           node_obj['run_state']['cluster_def'] 
         end
+      elsif @cluster_def != nil then
+        # In scripts we might be a long lived object
+        @cluster_def
+      end
+
+      begin
+        @cluster_def = fetch_cluster_def_http
+      rescue Exception => http_e
+        puts http_e 
+        puts http_e.backtrace
+        @cluster_def = fetch_cluster_def_local 
+      end
+
+      # if we have a node object memoize for next time we ask
+      if node_obj != nil then
+        node_obj['run_state']['cluster_def'] = @cluster_def
+        node_obj['run_state']['cluster_def']
+      else
+        @cluster_def
+      end
     end
 
     # fetch cluster definition via http
     def fetch_cluster_def_http
-      cluster_def_url = "http://#{node[:bcpc][:bootstrap][:server]}#{node[:bcpc][:bootstrap][:cluster_def_path]}"
+      cluster_def_url = "http://#{node_obj[:bcpc][:bootstrap][:server]}#{node_obj[:bcpc][:bootstrap][:cluster_def_path]}"
       response = Faraday.get cluster_def_url 
       if response.success? then
         parse_cluster_def(response.body.split("\n"))
