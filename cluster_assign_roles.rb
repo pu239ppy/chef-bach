@@ -28,6 +28,10 @@ require 'cluster_data'
 
 class ClusterAssignRoles
 
+  def initialize
+    @cd = BACH::ClusterData.new
+    @ridley ||= @cd.ridley
+  end
   #
   # Takes no arguments.
   #
@@ -35,12 +39,12 @@ class ClusterAssignRoles
   #
   def all_hadoop_head_nodes
     # All head nodes should have this specific role.
-      confirmed_head_nodes = BACH::ClusterData.new.fetch_cluster_def.select do |nn|
+      confirmed_head_nodes = @cd.fetch_cluster_def.select do |nn|
       nn[:runlist].include?('role[BCPC-Hadoop-Head]')
     end
 
     # Any nodes that have something matching "Head"
-      possible_head_nodes = BACH::ClusterData.new.fetch_cluster_def.select do |nn|
+      possible_head_nodes = @cd.fetch_cluster_def.select do |nn|
       nn[:runlist].include?('Head')
     end
 
@@ -70,7 +74,7 @@ class ClusterAssignRoles
   #   updates Chef-server with runlists for nodes passed in
   def assign_roles(nodes:, runlist: nil)
     nodes.each do |node|
-      chef_node_object = ridley.node.find(node[:fqdn])
+      chef_node_object = @ridley.node.find(node[:fqdn])
 
       if chef_node_object.nil?
         raise "Could not find node object for #{node[:fqdn]}"
@@ -102,7 +106,7 @@ class ClusterAssignRoles
     end
 
     timeout.times do |ii|
-      found_nodes = ridley.search(:node, search).map do |nn|
+      found_nodes = @ridley.search(:node, search).map do |nn|
         nn.name.downcase
       end.to_set
 
@@ -112,7 +116,7 @@ class ClusterAssignRoles
       else
         if ii % 60 == 0
           if ii == 0
-            reindex_chef_server
+            @cd.reindex_chef_server
           end
           puts "Waiting for nodes to appear in search results (#{search})..."
         elsif ii == (timeout - 1)
@@ -151,7 +155,7 @@ class ClusterAssignRoles
 
     result = ssh(host: node[:ip_address],
                  username: 'ubuntu',
-                 password: cobbler_root_password,
+                 password: @cd.cobbler_root_password,
                  command: chef_command,
                  streaming: true)
 
@@ -171,7 +175,7 @@ class ClusterAssignRoles
 
   def install_basic(target_nodes)
     target_nodes.each do |node|
-      unless ridley.node.find(node[:fqdn]) && ridley.client.find(node[:fqdn])
+      unless @ridley.node.find(node[:fqdn]) && @ridley.client.find(node[:fqdn])
         install_stub(node: node)
       end
 
@@ -179,7 +183,7 @@ class ClusterAssignRoles
       # After installing chef-vault in install_stub, we need to
       # re-index node data and re-run chef searches on all our vaults.
       #
-      refresh_vault_keys(node)
+      @cd.refresh_vault_keys(node)
 
       runlist = 'role[Basic],recipe[bcpc::default],recipe[bcpc::networking]'
       puts "#{node[:fqdn]}: Cheffing with runlist '#{runlist}'"
@@ -248,7 +252,7 @@ class ClusterAssignRoles
 
   def install_kafka(target_nodes)
     # Zookeeper has to come up before Kafka.
-      all_zk_nodes = BACH::ClusterData.new.fetch_cluster_def.select do |node|
+      all_zk_nodes = @cd.fetch_cluster_def.select do |node|
       node[:runlist].include?('role[BCPC-Kafka-Head-Zookeeper]')
     end
 
@@ -301,7 +305,7 @@ class ClusterAssignRoles
     #
     # The simple workaround is to provide the names in JSON format instead.
     #
-    vault_json = if ridley.data_bag.find("ssh_host_keys/#{node[:fqdn]}")
+    vault_json = if @ridley.data_bag.find("ssh_host_keys/#{node[:fqdn]}")
                    {ssh_host_keys: node[:fqdn]}.to_json.to_s
                  else
                    '{}'
@@ -310,7 +314,7 @@ class ClusterAssignRoles
     cc =
       Mixlib::ShellOut.new('sudo', '/opt/chefdk/bin/knife', 'bootstrap',
                            '-y',
-                           '-E', chef_environment_name,
+                           '-E', @cd.chef_environment_name,
                            '-r', runlist,
                            '-x', 'ubuntu',
                            '-P', cobbler_root_password,
@@ -344,7 +348,7 @@ class ClusterAssignRoles
   end
 
   def set_chef_admin(node:, admin:)
-    client = ridley.client.find(node[:fqdn])
+    client = @ridley.client.find(node[:fqdn])
 
     if client.nil?
       raise "Could not find client object for '#{node[:fqdn]}'"
@@ -429,7 +433,7 @@ class ClusterAssignRoles
       exit 1
     end
 
-    unless ridley.environment.find(requested_environment)
+    unless @ridley.environment.find(requested_environment)
       raise "'#{requested_environment}' not found on Chef server!"
     end
 
@@ -439,15 +443,15 @@ class ClusterAssignRoles
     end
 
     target_nodes = if optional_thing.nil?
-                       BACH::ClusterData.new.fetch_cluster_def
+                       @cd.fetch_cluster_def
                    else
-                       node_matches = BACH::ClusterData.new.fetch_cluster_def.select do |entry|
+                       node_matches = @cd.fetch_cluster_def.select do |entry|
                        entry[:ip_address].include?(optional_thing) ||
                        entry[:fqdn].include?(optional_thing.downcase)
                      end
 
                      if node_matches.empty?
-                         node_matches = BACH::ClusterData.new.fetch_cluster_def.select do |entry|
+                         node_matches = @cd.fetch_cluster_def.select do |entry|
                          entry[:runlist]
                            .downcase
                            .include?(optional_thing.downcase)
