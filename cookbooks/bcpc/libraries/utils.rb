@@ -161,6 +161,7 @@ def fetch_all_nodes
   end
   cd = node.run_state['cluster_def']
   cd.fetch_cluster_def
+end
 
 # Get all nodes for this Chef environment
 def get_all_nodes
