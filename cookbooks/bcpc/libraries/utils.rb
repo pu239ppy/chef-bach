@@ -153,6 +153,15 @@ def get_config!(key,item=node.chef_environment,bag="configs")
   return value
 end
 
+# Get all nodes without search
+# Currently cannot rewrite get_all_nodes as some clients rely on real chef node objects
+def fetch_all_nodes
+  if node.run_state['cluster_def'] == nil then
+    node.run_state['cluster_def'] = BACH::ClusterData.new(node)
+  end
+  cd = node.run_state['cluster_def']
+  cd.fetch_cluster_def
+
 # Get all nodes for this Chef environment
 def get_all_nodes
   results = Chef::Search::Query.new.search(:node, "chef_environment:#{node.chef_environment}").first
@@ -186,11 +195,7 @@ def get_head_nodes
   # Zookeeper nodes are the de facto heads for a Kafka cluster, since
   # they run Zabbix, Graphite, MySQL et al.
   #
-  if node.run_state['cluster_def'] == nil then
-    node.run_state['cluster_def'] = BACH::ClusterData.new(node)
-  end
-  cd = node.run_state['cluster_def']
-  cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" or hst[:runlist].include? "role[BCPC-Kafka-Head-Zookeeper]" }
+  fetch_all_nodes.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" or hst[:runlist].include? "role[BCPC-Kafka-Head-Zookeeper]" }
 end
 
 def get_head_node_names
