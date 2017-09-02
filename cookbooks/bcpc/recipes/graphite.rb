@@ -84,7 +84,7 @@ end
   end
 end
 
-mysql_servers = BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }.map { |hst| hst[:ip_address] }
+mysql_servers = get_head_nodes.map { |hst| hst[:ip_address] }
   #get_node_attributes(MGMT_IP_GRAPHITE_WEBPORT_ATTR_SRCH_KEYS,'mysql','bcpc')
 
 # Directory resource sets owner and group only to the leaf directory.
