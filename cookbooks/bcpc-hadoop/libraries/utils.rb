@@ -19,6 +19,7 @@
 
 require 'openssl'
 require 'thread'
+require 'cluster_data'
 
 #
 # Constant string which defines the default attributes which need to be retrieved from node objects
@@ -82,7 +83,7 @@ def make_config!(key, value)
 end
 
 def get_hadoop_heads
-  results = BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }
+  results = fetch_all_nodes.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }
   if results.any?{|x| x['hostname'] == node[:hostname]}
     results.map!{|x| x['hostname'] == node[:hostname] ? node : x}
   else
@@ -92,7 +93,7 @@ def get_hadoop_heads
 end
 
 def get_quorum_hosts
-  results = BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Quorumnode]" or hst[:runlist].include? "role[BCPC-Hadoop-Head]" }
+  results = fetch_all_nodes.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Quorumnode]" or hst[:runlist].include? "role[BCPC-Hadoop-Head]" }
   if results.any?{|x| x['hostname'] == node[:hostname]}
     results.map!{|x| x['hostname'] == node[:hostname] ? node : x}
   else
@@ -102,7 +103,7 @@ def get_quorum_hosts
 end
 
 def get_hadoop_workers
-  results = BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }
+  results = fetch_all_nodes.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }
   if results.any?{|x| x['hostname'] == node[:hostname]}
     results.map!{|x| x['hostname'] == node[:hostname] ? node : x}
   else
@@ -115,10 +116,9 @@ def get_namenodes()
   # Logic to get all namenodes if running in HA
   # or to get only the master namenode if not running in HA
   if node['bcpc']['hadoop']['hdfs']['HA']
-    nn_hosts = BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-Namenode]" or hst[:runlist].include? "role[BCPC-Hadoop-Head-Namenode-Standby]" }
+    nn_hosts = fetch_all_nodes.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-Namenode]" or hst[:runlist].include? "role[BCPC-Hadoop-Head-Namenode-Standby]" }
   else
-    #nn_hosts = get_nodes_for("namenode_no_HA")
-    nn_hosts = BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-Namenode-NoHA]" }
+    nn_hosts = fetch_all_nodes.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-Namenode-NoHA]" }
   end
   return nn_hosts.uniq{ |x| float_host(x[:hostname]) }.sort
 end
@@ -188,59 +188,64 @@ end
 # Function to retrieve commonly used node attributes so that the call to chef server is minimized
 #
 def set_hosts
+  if node.run_state['cluster_def'] == nil then
+    node.run_state['cluster_def'] = BACH::ClusterData.new(node)
+  end
+  cd = node.run_state['cluster_def']
+  
   # every head is a zookeeper server
   node.default[:bcpc][:hadoop][:zookeeper][:servers] = 
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain], 'node_number' => hst[:node_id], 'zookeeper_myid' => nil } }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain], 'node_number' => hst[:node_id], 'zookeeper_myid' => nil } }
 
   # Every head is a journal node
   node.default[:bcpc][:hadoop][:jn_hosts] = 
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
 
   node.default[:bcpc][:hadoop][:rm_hosts] = 
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-ResourceManager]" }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain], 'node_number' => hst[:node_id], 'zookeeper_myid' => nil } }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-ResourceManager]" }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain], 'node_number' => hst[:node_id], 'zookeeper_myid' => nil } }
 
   # BCPC-Hadoop-Head-MapReduce
   node.default[:bcpc][:hadoop][:hs_hosts] = 
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-MapReduce]" }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-MapReduce]" }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
 
   # every BCPC-Hadoop-Worker is a datanode
   node.default[:bcpc][:hadoop][:dn_hosts] = 
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
 
   # Misnomer that really menas region servers every BCPC-Hadoop-Head-HBase is a hbase region server
   node.default[:bcpc][:hadoop][:hb_hosts] = 
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-HBase]" }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-HBase]" }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
 
   # different flavors of hive
   node.default[:bcpc][:hadoop][:hive_hosts] = 
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist] =~ /role\[BCPC-Hadoop-Hive/ }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist] =~ /role\[BCPC-Hadoop-Hive/ }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
 
   # BCPC-Hadoop-Head-MapReduce
   node.default[:bcpc][:hadoop][:oozie_hosts]  = 
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-MapReduce]" }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-MapReduce]" }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
   
   # every datanode
   node.default[:bcpc][:hadoop][:httpfs_hosts] = 
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
 
   # Worker
   node.default[:bcpc][:hadoop][:rs_hosts] = get_node_attributes(HOSTNAME_ATTR_SRCH_KEYS,"region_server","bcpc-hadoop")
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
 
   # BCPC-Hadoop-Head
   node.default[:bcpc][:hadoop][:mysql_hosts] = 
-      BACH::ClusterData.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }.map {
-        |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+    cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }.map {
+      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
 end
 
 #
