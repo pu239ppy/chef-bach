@@ -191,12 +191,16 @@ def get_cached_head_node_names
   return headnodes.sort
 end
 
-def get_head_nodes
+def get_head_nodes(node_objs=false)
   #
   # Zookeeper nodes are the de facto heads for a Kafka cluster, since
   # they run Zabbix, Graphite, MySQL et al.
   #
-  fetch_all_nodes.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" or hst[:runlist].include? "role[BCPC-Kafka-Head-Zookeeper]" }
+  if node_objs == true then
+    Chef::Search::Query.new.search(:node, 'role:BCPC-Hadoop-Head OR role:BCPC-Kafka-Head-Zookeeper').first
+  else
+    fetch_all_nodes.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" or hst[:runlist].include? "role[BCPC-Kafka-Head-Zookeeper]" }
+  end
 end
 
 def get_head_node_names
