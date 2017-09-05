@@ -208,6 +208,7 @@ template '/opt/graphite/webapp/graphite/local_settings.py' do
   group 'www-data'
   mode 00440
   variables(
+    :web_port => node['bcpc']['graphite']['web_port'],
     :servers => head_nodes,
     :min_quorum => head_nodes.length/2 + 1 )
   notifies :restart, 'service[apache2]', :delayed
