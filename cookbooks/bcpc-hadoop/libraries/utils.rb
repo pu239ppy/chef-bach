@@ -506,25 +506,3 @@ def update_oozie_sharelib(host)
   end
 end
 
-def get_cluster_nodes()
-
-  cluster_file = node['bcpc']['cluster']['file_path']
-
-  if !File::file?(cluster_file)
-    Chef::Log.fatal("File #{cluster_file} does not exist.")
-    raise
-  end
-
-  nodeList = Array.new
-
-  File::open(cluster_file,"r").each_line do |line|
-    lines = line.split()
-    nodeList.push("#{lines[0]}.#{lines[5]}")
-  end
-
-  if ! node[:bcpc][:management][:viphost].nil?
-    nodeList.push(node[:bcpc][:management][:viphost])
-  end
-
-  nodeList  
-end
