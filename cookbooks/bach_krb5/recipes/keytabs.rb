@@ -39,7 +39,7 @@ BACH::ClusterData.new.fetch_cluster_def().map { |hst| hst[:fqdn] }.each do |h|
   end
 end
 
-BACH::ClustrData.new.fetch_cluster_def().map { |hst| hst[:fqdn] }.each do |h|
+BACH::ClusterData.new.fetch_cluster_def().map { |hst| hst[:fqdn] }.each do |h|
   host_fqdn = float_host(h)
 
   # Create a subdirectory for each host.
