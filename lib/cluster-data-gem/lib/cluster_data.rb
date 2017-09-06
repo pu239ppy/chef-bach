@@ -250,7 +250,7 @@ module BACH
     # fetch cluster definition via http
     def fetch_cluster_def_http
       cluster_def_url = "http://#{@node_obj[:bcpc][:bootstrap][:server]}#{@node_obj[:bcpc][:bootstrap][:cluster_def_path]}"
-      response = Faraday.get cluster_def_url 
+      response = Faraday.new(:proxy => '').get cluster_def_url
       if response.success? then
         parse_cluster_def(response.body.split("\n"))
       else
