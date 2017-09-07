@@ -120,7 +120,7 @@ def get_namenodes()
   else
     nn_hosts = fetch_all_nodes.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-Namenode-NoHA]" }
   end
-  return nn_hosts.uniq{ |x| float_host(x[:hostname]) }.sort
+  return nn_hosts.uniq{ |x| float_host(x[:hostname]) }.sort_by{ |h| h[:node_id]}
 end
 
 def get_nodes_for(recipe, cookbook=cookbook_name)
