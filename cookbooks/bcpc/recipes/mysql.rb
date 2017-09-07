@@ -192,8 +192,7 @@ mysql_database_user root_user do
   action :grant
 end
 
-mysql_nodes = get_nodes_for('mysql', 'bcpc')
-all_nodes = get_all_nodes
+mysql_nodes = get_head_nodes
 pool_size = node['bcpc']['mysql']['innodb_buffer_pool_size']
 
 template '/etc/mysql/conf.d/wsrep.cnf' do
