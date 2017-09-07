@@ -13,8 +13,8 @@ ruby_block "hdfs_site_generated_values_common" do
 
      "dfs.ha.namenodes.#{node.chef_environment}" =>
        get_namenodes
-       .select{ |nn| nn[:bcpc][:node_number] }
-       .map{ |nn| "namenode#{nn[:bcpc][:node_number]}" }.join(','),
+       .select{ |nn| nn[:node_id] }
+       .map{ |nn| "namenode#{nn[:node_id]}" }.join(','),
 
      'dfs.datanode.data.dir' =>
        node.run_state[:bcpc_hadoop_disks][:mounts]
@@ -62,17 +62,17 @@ ruby_block "hdfs_site_generated_values_nn_properties" do
     namenode_properties = get_namenodes.map do |host|
       {
        'dfs.namenode.rpc-address.' + node.chef_environment +
-         '.namenode' + host[:bcpc][:node_number].to_s =>
+         '.namenode' + host[:node_id].to_s =>
          float_host(host[:fqdn]) + ':' +
          node[:bcpc][:hadoop][:namenode][:rpc][:port].to_s,
 
        'dfs.namenode.http-address.' + node.chef_environment +
-         '.namenode' + host[:bcpc][:node_number].to_s =>
+         '.namenode' + host[:node_id].to_s =>
          float_host(host[:fqdn]) + ':' +
          node[:bcpc][:hadoop][:namenode][:http][:port].to_s,
 
        'dfs.namenode.https-address.' + node.chef_environment +
-         '.namenode' + host[:bcpc][:node_number].to_s =>
+         '.namenode' + host[:node_id].to_s =>
          float_host(host[:fqdn]) + ':' +
          node[:bcpc][:hadoop][:namenode][:https][:port].to_s,
       }
