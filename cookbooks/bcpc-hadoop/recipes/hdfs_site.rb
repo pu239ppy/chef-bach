@@ -252,7 +252,7 @@ ruby_block "hdfs_site_generated_values_ha_properties" do
   block do
     if node[:bcpc][:hadoop][:hdfs][:HA]
       # This is a cached node search.
-      zk_hosts = get_hadoop_heads 
+      zk_hosts = get_head_nodes 
 
       ha_properties =
         {
