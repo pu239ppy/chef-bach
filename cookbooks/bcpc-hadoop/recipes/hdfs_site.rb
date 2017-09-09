@@ -1,6 +1,4 @@
 # vim: tabstop=2:shiftwidth=2:softtabstop=2:expandtabs
-subnet = node[:bcpc][:management][:subnet]
-
 hdfs_site_values = node[:bcpc][:hadoop][:hdfs][:site_xml]
 
 ruby_block "hdfs_site_generated_values_common" do
@@ -254,17 +252,17 @@ ruby_block "hdfs_site_generated_values_ha_properties" do
   block do
     if node[:bcpc][:hadoop][:hdfs][:HA]
       # This is a cached node search.
-      zk_hosts = node[:bcpc][:hadoop][:zookeeper][:servers]
+      zk_hosts = get_hadoop_heads 
 
       ha_properties =
         {
          'ha.zookeeper.quorum' =>
-           zk_hosts.map{ |s| float_host(s[:hostname]) +
+           zk_hosts.map{ |s| float_host(s[:fqdn]) +
              ":#{node[:bcpc][:hadoop][:zookeeper][:port]}" }.join(','),
 
          'dfs.namenode.shared.edits.dir' =>
            'qjournal://' +
-           zk_hosts.map{ |s| float_host(s[:hostname]) + ":8485" }.join(";") +
+           zk_hosts.map{ |s| float_host(s[:fqdn]) + ":8485" }.join(";") +
            '/' + node.chef_environment,
 
          # Why is this added twice?
