@@ -89,7 +89,7 @@ def get_hadoop_heads
   else
     results.push(node) if node[:roles].include? "BCPC-Hadoop-Head"
   end
-  return results.sort
+  return results.sort_by{ |h| h[:node_id]}
 end
 
 def get_quorum_hosts
@@ -99,7 +99,7 @@ def get_quorum_hosts
   else
     results.push(node) if node[:roles].include? "BCPC-Hadoop-Quorumnode"
   end
-  return results.sort
+  return results.sort_by{ |h| h[:node_id]}
 end
 
 def get_hadoop_workers
@@ -109,7 +109,7 @@ def get_hadoop_workers
   else
     results.push(node) if node[:roles].include? "BCPC-Hadoop-Worker"
   end
-  return results.sort
+  return results.sort_by{ |h| h[:fqdn]}
 end
 
 def get_namenodes()
@@ -196,12 +196,12 @@ def set_hosts
   # every head is a zookeeper server
   node.default[:bcpc][:hadoop][:zookeeper][:servers] = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain], 'node_number' => hst[:node_id], 'zookeeper_myid' => nil } }
+      |hst| { 'hostname' => hst[:fqdn], 'node_number' => hst[:node_id], 'zookeeper_myid' => nil } }
 
   # Every head is a journal node
   node.default[:bcpc][:hadoop][:jn_hosts] = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+      |hst| { 'hostname' => hst[:fqdn]} }
 
   node.default[:bcpc][:hadoop][:rm_hosts] = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-ResourceManager]" }.map {
