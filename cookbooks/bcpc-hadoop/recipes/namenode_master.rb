@@ -122,7 +122,7 @@ bash "format-zk-hdfs-ha" do
   action :run
   user "hdfs"
   notifies :restart, "service[generally run hadoop-hdfs-namenode]", :delayed
-  zks = node[:bcpc][:hadoop][:zookeeper][:servers].map{|zkh| "#{float_host(zkh[:hostname])}:#{node[:bcpc][:hadoop][:zookeeper][:port]}"}.join(",")
+  zks = get_head_nodes.map{|zkh| "#{float_host(zkh[:fqdn])}:#{node[:bcpc][:hadoop][:zookeeper][:port]}"}.join(",")
   not_if { znode_exists?("/hadoop-ha/#{node.chef_environment}", zks) }
 end
 
