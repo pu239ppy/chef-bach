@@ -410,7 +410,7 @@
 
   <property>
     <name>oozie.zookeeper.connection.string</name>
-    <value><%= node[:bcpc][:hadoop][:zookeeper][:servers].map{ |s| float_host(s[:hostname])}.join(",") %></value>
+    <value><%= get_head_nodes.map{ |s| float_host(s[:fqdn])}.join(",") %></value>
   </property>
 
 </configuration>
