@@ -205,47 +205,47 @@ def set_hosts
 
   node.default[:bcpc][:hadoop][:rm_hosts] = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-ResourceManager]" }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain], 'node_number' => hst[:node_id], 'zookeeper_myid' => nil } }
+      |hst| { 'hostname' => hst[:fqdn], 'node_number' => hst[:node_id], 'zookeeper_myid' => nil } }
 
   # BCPC-Hadoop-Head-MapReduce
   node.default[:bcpc][:hadoop][:hs_hosts] = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-MapReduce]" }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+      |hst| { 'hostname' => hst[:fqdn]} }
 
   # every BCPC-Hadoop-Worker is a datanode
   node.default[:bcpc][:hadoop][:dn_hosts] = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+      |hst| { 'hostname' => hst[:fqdn]} }
 
   # Misnomer that really menas region servers every BCPC-Hadoop-Head-HBase is a hbase region server
   node.default[:bcpc][:hadoop][:hb_hosts] = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-HBase]" }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+      |hst| { 'hostname' => hst[:fqdn]} }
 
   # different flavors of hive
   node.default[:bcpc][:hadoop][:hive_hosts] = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist] =~ /role\[BCPC-Hadoop-Hive/ }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+      |hst| { 'hostname' => hst[:fqdn]} }
 
   # BCPC-Hadoop-Head-MapReduce
   node.default[:bcpc][:hadoop][:oozie_hosts]  = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head-MapReduce]" }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+      |hst| { 'hostname' => hst[:fqdn]} }
   
   # every datanode
   node.default[:bcpc][:hadoop][:httpfs_hosts] = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+      |hst| { 'hostname' => hst[:fqdn]} }
 
   # Worker
   node.default[:bcpc][:hadoop][:rs_hosts] = get_node_attributes(HOSTNAME_ATTR_SRCH_KEYS,"region_server","bcpc-hadoop")
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Worker]" }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+      |hst| { 'hostname' => hst[:fqdn]} }
 
   # BCPC-Hadoop-Head
   node.default[:bcpc][:hadoop][:mysql_hosts] = 
     cd.fetch_cluster_def.select { |hst| hst[:runlist].include? "role[BCPC-Hadoop-Head]" }.map {
-      |hst| { 'hostname' => hst[:hostname] + hst[:dns_domain]} }
+      |hst| { 'hostname' => hst[:fqdn]} }
 end
 
 #
