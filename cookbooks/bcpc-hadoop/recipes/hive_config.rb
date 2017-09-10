@@ -32,7 +32,7 @@ end
 
 hive_site_vars = {
   is_hive_server: node.run_list.expand(node.chef_environment).recipes.include?('bcpc-hadoop::hive_hcatalog'),
-  mysql_hosts: node['bcpc']['hadoop']['mysql_hosts'].map { |m| m[:hostname] + ':3306' },
+  mysql_hosts: get_head_nodes.map { |m| m[:fqdn] + ':3306' },
   zk_hosts: node['bcpc']['hadoop']['zookeeper']['servers'],
   hive_hosts: node['bcpc']['hadoop']['hive_hosts'],
   stats_user: stats_user,
@@ -87,7 +87,7 @@ generated_values = {
       .map{ |s| float_host(s[:hostname]) + ":9083" }
       .join(","),
   'hive.zookeeper.quorum' =>
-    hive_site_vars[:zk_hosts].map{ |s| float_host(s[:hostname]) }.join(","),
+    get_head_nodes.map{ |s| float_host(s[:fqdn]) }.join(","),
   'hive.server2.support.dynamic.service.discovery' => 'true',
   'hive.server2.zookeeper.namespace' => 
     "HS2-#{node.chef_environment}-#{hive_site_vars[:hs2_auth]}",
