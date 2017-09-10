@@ -22,6 +22,10 @@ end
   hdp_select(pkg, node[:bcpc][:hadoop][:distribution][:active_release])
 end
 
+link '/usr/hdp/current/hive-client/lib/mysql-connector-java.jar' do
+  to '/usr/share/java/mysql-connector-java.jar/mysql-connector-java.jar'
+end
+
 user_ulimit "hive" do
   filehandle_limit 65536
   process_limit 65536
