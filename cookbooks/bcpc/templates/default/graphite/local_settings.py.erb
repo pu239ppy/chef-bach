@@ -199,7 +199,7 @@ INTRACLUSTER_HTTPS = <%="#{node['bcpc']['graphite']['web_https'] == true ? 'True
 # and a common scheme is to use 7102 for instance b, 7202 for instance c, etc.
 #
 # You *should* use 127.0.0.1 here in most cases
-CARBONLINK_HOSTS = [ <%="#{@servers.collect{|hst| "#{hst[:ip_address]}:7002"}.sort.join(', ')}"%> ]
+CARBONLINK_HOSTS = [ <%="#{@servers.collect{|x| "\""+x[:ip_address]+":7002\""}.sort.join(', ')}"%> ]
 #CARBONLINK_TIMEOUT = 1.0
 #CARBONLINK_RETRY_DELAY = 15 # Seconds to blacklist a failed remote server
 
