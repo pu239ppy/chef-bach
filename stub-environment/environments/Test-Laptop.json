@@ -47,6 +47,9 @@
                                    "virtualbox-guest-utils" ]
         }
       },
+      "mysql": {
+        "bootstrap_on_error": true
+      },
       "hadoop" : {
         "yarn" : {
           "resourcemanager" : {
