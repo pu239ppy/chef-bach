@@ -18,7 +18,7 @@ default["bcpc"]["hadoop"]["hive"]["scratch"]["dir"] = \
 default[:bcpc][:hadoop][:hive][:site_xml].tap do |site_xml|
   # hive.* options
   site_xml['hive.aux.jars.path'] =
-    'file:///usr/share/java/mysql-connector-java.jar/mysql-connector-java.jar,' + 
+    'file:///usr/share/java/mysql-connector-java.jar,' + 
     'file:///usr/hdp/current/hive-webhcat/share/hcatalog/hive-hcatalog-core.jar'
   site_xml['hive.exec.scratchdir'] = \
     ::File.join(node[:bcpc][:hadoop][:hive][:scratch][:dir], '${user.name}')
