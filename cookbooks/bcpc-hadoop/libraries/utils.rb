@@ -224,7 +224,7 @@ def set_hosts
 
   # different flavors of hive
   node.default[:bcpc][:hadoop][:hive_hosts] = 
-    cd.fetch_cluster_def.select { |hst| hst[:runlist] =~ /role\[BCPC-Hadoop-Hive/ }.map {
+      cd.fetch_cluster_def.select { |hst| hst[:runlist].include 'role[BCPC-Hadoop-Head-Hive' }.map {
       |hst| { 'hostname' => hst[:fqdn]} }
 
   # BCPC-Hadoop-Head-MapReduce
