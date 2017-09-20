@@ -96,7 +96,7 @@ end
 
 [
   '/usr/share/HDP-oozie/ext-2.2.zip',
-  '/usr/share/java/mysql-connector-java.jar/mysql-connector-java.jar',
+  '/usr/share/java/mysql-connector-java.jar',
   "/usr/hdp/#{hdp_rel}/hadoop/lib/hadoop-lzo-0.6.0.#{hdp_rel}.jar"
 ].each do |dst|
   link "#{OOZIE_LIB_PATH}/libext/#{File.basename(dst)}" do
