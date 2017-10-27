@@ -71,11 +71,23 @@ template "/etc/hadoop/conf/hadoop-env.sh" do
   )
 end
 
+execute 'hdfs node refresh' do
+  command 'hdfs dfsadmin -refreshNodes'
+  action :nothing
+  user 'hdfs'
+  only_if {
+      node.roles.include?("BCPC-Hadoop-Head-NameNode") || 
+      node.roles.include?("BCPC-Hadoop-Head-NameNode-Standby")
+  }
+end
+
 file "/etc/hadoop/conf/dfs.exclude" do
   content node["bcpc"]["hadoop"]["decommission"]["hosts"].join("\n")
   mode 0644
   only_if { !node["bcpc"]["hadoop"]["decommission"]["hosts"].nil? }
+  notfifies :run, 'execute[hdfs node refresh]', :immediately
 end
+
 
 include_recipe 'bcpc-hadoop::core_site'
 include_recipe 'bcpc-hadoop::hdfs_site'
