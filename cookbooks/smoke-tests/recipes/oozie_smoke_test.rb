@@ -109,7 +109,7 @@ ruby_block 'smoke test coordinator status' do
     end
     # no need to interact with command line
     # we do not plan to submit
-    only_if { node['hadoop_smoke_tests']['oozie_submit_enable'] == true } 
+    only_if { node['hadoop_smoke_tests']['oozie_submit_enable'] == true }
 end
 
 ruby_block 'submit oozie smoke test' do
